@@ -111,7 +111,7 @@ project "TestEditor"
 	setupSystem()
 
 	postbuildcommands {
-  		"{COPY} $(MSBuildProjectDirectory)/../ThirdParty/glfw/lib-vc2017/glfw3.dll %{cfg.targetdir}"
+  		"{COPY} ../ThirdParty/glfw/lib-vc2017/glfw3.dll %{cfg.targetdir}"
 	}
 
 	
