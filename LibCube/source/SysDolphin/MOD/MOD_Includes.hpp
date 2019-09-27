@@ -23,44 +23,37 @@ static inline void skipPadding(oishii::BinaryReader& bReader)
 	skipChunk(bReader, toRead);
 }
 
-//! @brief  Vector3, contains x, y & z
-struct Vector3
+template<typename TComponent, int TComponentCount>
+inline void read(oishii::BinaryReader& reader, glm::vec<TComponentCount, TComponent, glm::defaultp>& out);
+
+template<>
+inline void read<f32, 3>(oishii::BinaryReader& reader, glm::vec3& out)
 {
-	constexpr static const char name[] = "Vector3";
-	glm::vec3 m_vec;
+	out.x = reader.read<f32>();
+	out.y = reader.read<f32>();
+	out.z = reader.read<f32>();
+}
 
-	static void onRead(oishii::BinaryReader& bReader, Vector3& context)
-	{
-		context.m_vec.x = bReader.read<float>();
-		context.m_vec.y = bReader.read<float>();
-		context.m_vec.z = bReader.read<float>();
-	}
-};
-
-//! @brief Vector2, contains x & y
-struct Vector2
+template<>
+inline void read<f32, 2>(oishii::BinaryReader& reader, glm::vec2& out)
 {
-	constexpr static const char name[] = "Vector2";
-	glm::vec2 m_vec;
+	out.x = reader.read<f32>();
+	out.y = reader.read<f32>();
+}
 
-	static void onRead(oishii::BinaryReader& bReader, Vector2& context)
-	{
-		context.m_vec.x = bReader.read<float>();
-		context.m_vec.y = bReader.read<float>();
-	}
-};
 
 //! @brief Bounding Box, contains minimum bounds and maximum bounds
 struct BoundBox
 {
 	constexpr static const char name[] = "Bounding Box";
-	Vector3 m_minBounds;
-	Vector3 m_maxBounds;
+
+	glm::vec3 m_minBounds;
+	glm::vec3 m_maxBounds;
 
 	static void onRead(oishii::BinaryReader& bReader, BoundBox& context)
 	{
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_minBounds);
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_maxBounds);
+		read(bReader, context.m_minBounds);
+		read(bReader, context.m_maxBounds);
 	}
 };
 
@@ -68,12 +61,12 @@ struct BoundBox
 struct Plane
 {
 	constexpr static const char name[] = "Plane";
-	Vector3 m_unk1;
+	glm::vec3 m_unk1;
 	f32 m_unk2;
 
 	static void onRead(oishii::BinaryReader& bReader, Plane& context)
 	{
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_unk1);
+		read(bReader, context.m_unk1);
 		context.m_unk2 = bReader.read<f32>();
 	}
 };
@@ -276,12 +269,12 @@ struct Joint
 	u32 m_unk1;
 	bool m_unk2;
 	bool m_unk3;
-	Vector3 m_boundsMin;
-	Vector3 m_boundsMax;
+	glm::vec3 m_boundsMin;
+	glm::vec3 m_boundsMax;
 	f32 m_boundsSphereRadius;
-	Vector3 m_scale;
-	Vector3 m_rotation;
-	Vector3 m_translation;
+	glm::vec3 m_scale;
+	glm::vec3 m_rotation;
+	glm::vec3 m_translation;
 	struct MatPoly
 	{
 		u16 m_index; // I think this is an index of sorts, not sure what though. :/
@@ -298,12 +291,12 @@ struct Joint
 		context.m_unk2 = (unk1 & 1) != 0;
 		context.m_unk3 = (unk1 & 0x4000) != 0;
 
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_boundsMin);
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_boundsMax);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_boundsMin);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_boundsMax);
 		context.m_boundsSphereRadius = bReader.read<f32>();
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_scale);
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_rotation);
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_translation);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_scale);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_rotation);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_translation);
 
 		context.m_matpolys.resize(bReader.read<u32>());
 		for (auto& matpoly : context.m_matpolys)
@@ -334,15 +327,15 @@ struct NBT
 {
 	constexpr static const char name[] = "NBT";
 
-	Vector3 m_normals; //N
-	Vector3 m_binormals; //B
-	Vector3 m_tangents; //T
+	glm::vec3 m_normals; //N
+	glm::vec3 m_binormals; //B
+	glm::vec3 m_tangents; //T
 
 	static void onRead(oishii::BinaryReader& bReader, NBT& context)
 	{
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_normals);
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_binormals);
-		bReader.dispatch<Vector3, oishii::Direct, false>(context.m_tangents);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_normals);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_binormals);
+		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_tangents);
 	}
 };
 
@@ -421,7 +414,7 @@ struct TexAttr
 	constexpr static const char name[] = "Texture Attribute";
 	u16 m_imageNum;	//2
 	u16 m_tilingMode;	//4
-	enum TEXATTRMODE { DEFAULT = 0, UNK, EDG, UNK2, XLU  } m_mode;	//6
+	enum TEXATTRMODE { DEFAULT = 0, UNK, EDG, UNK2, XLU } m_mode;	//6
 	u16 m_unk1;
 	f32 m_unk2;	//10
 
