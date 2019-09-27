@@ -48,8 +48,8 @@ struct MOD
 		int m_unk = 0;
 	} m_header;
 
-	std::vector<Vector3> m_vertices; // vertices
-	std::vector<Vector3> m_vnorms; // vertex normals
+	std::vector<glm::vec3> m_vertices; // vertices
+	std::vector<glm::vec3> m_vnorms; // vertex normals
 	std::vector<NBT> m_nbt; // unknown, to do with vertices
 	std::vector<Colour> m_colours; // vertex colours
 	std::vector<VtxMatrix> m_vtxmatrices; // vertex matrices
@@ -57,7 +57,7 @@ struct MOD
 	std::vector<Joint> m_joints; // joints
 	std::vector<String> m_jointNames; // joint names
 	std::vector<TXE> m_textures; // textures
-	std::vector<Vector2> m_texcoords[8]; // texture coordinates 0 - 7, x = s, y  = t
+	std::vector<glm::vec2> m_texcoords[8]; // texture coordinates 0 - 7, x = s, y  = t
 	std::vector<TexAttr> m_texattrs; // texture attributes
 	std::vector<Material> m_materials; // texture environments
 	std::vector<Envelope> m_envelopes; // skinning envelopes
@@ -90,7 +90,7 @@ struct MOD
 	MOD() = default;
 	~MOD() = default;
 
-	void read(oishii::BinaryReader&);
+	void parse(oishii::BinaryReader&);
 };
 
 }

@@ -291,12 +291,12 @@ struct Joint
 		context.m_unk2 = (unk1 & 1) != 0;
 		context.m_unk3 = (unk1 & 0x4000) != 0;
 
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_boundsMin);
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_boundsMax);
+		read(bReader, context.m_boundsMin);
+		read(bReader, context.m_boundsMax);
 		context.m_boundsSphereRadius = bReader.read<f32>();
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_scale);
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_rotation);
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_translation);
+		read(bReader, context.m_scale);
+		read(bReader, context.m_rotation);
+		read(bReader, context.m_translation);
 
 		context.m_matpolys.resize(bReader.read<u32>());
 		for (auto& matpoly : context.m_matpolys)
@@ -333,9 +333,9 @@ struct NBT
 
 	static void onRead(oishii::BinaryReader& bReader, NBT& context)
 	{
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_normals);
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_binormals);
-		bReader.dispatch<glm::vec3, oishii::Direct, false>(context.m_tangents);
+		read(bReader, context.m_normals);
+		read(bReader, context.m_binormals);
+		read(bReader, context.m_tangents);
 	}
 };
 

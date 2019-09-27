@@ -35,7 +35,7 @@ static bool openModelFile()
 	{
 		oishii::BinaryReader reader(std::move(data), static_cast<u32>(size), fileName.c_str());
 		pk1::MOD modelFile;
-		modelFile.read(reader);
+		modelFile.parse(reader);
 	}
 
 	fStream.close();

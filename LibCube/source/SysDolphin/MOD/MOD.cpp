@@ -27,7 +27,7 @@ void MOD::read_vertices(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 	for (auto& vertex : m_vertices)
 	{
-		bReader.dispatch<Vector3, oishii::Direct, false>(vertex);
+		read(bReader, vertex);
 	}
 	skipPadding(bReader);
 }
@@ -40,7 +40,7 @@ void MOD::read_vertexnormals(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 	for (auto& vnorm : m_vnorms)
 	{
-		bReader.dispatch<Vector3, oishii::Direct, false>(vnorm);
+		read(bReader, vnorm);
 	}
 	skipPadding(bReader);
 }
@@ -132,7 +132,7 @@ void MOD::read_texcoords(oishii::BinaryReader& bReader, u32 opcode)
 	skipPadding(bReader);
 	for (auto& coords : m_texcoords[texIndex])
 	{
-		bReader.dispatch<Vector2, oishii::Direct, false>(coords);
+		read(bReader, coords);
 	}
 	skipPadding(bReader);
 }
@@ -219,21 +219,21 @@ void MOD::read_jointnames(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::read(oishii::BinaryReader& bReader)
+void MOD::parse(oishii::BinaryReader& bReader)
 {
-	u32 cDescriptor = 0;
+	
 	bReader.setEndian(true); // big endian
-	bReader.seekSet(0); // reset file pointer position
 
-	do
+	bReader.seekSet(0); // reset file pointer position
+	// FIXME: ^^ Move to caller code -- MOD files may be embedded in an archive or other stream
+
+	for (u32 cDescriptor = 0; cDescriptor = bReader.read<u32>(); cDescriptor != 0xFFFF)
 	{
-		const u32 cPosition = bReader.tell();
-		cDescriptor = bReader.read<u32>();
 		const u32 cLength = bReader.read<u32>();
 
-		if (cPosition & 0x1f)
+		if ((bReader.tell() - 4) & 0x1f)
 		{
-			DebugReport("bReader.tell() isn't aligned with 0x20! ERROR!\n");
+			bReader.warnAt("bReader.tell() isn't aligned with 0x20! ERROR!\n", bReader.tell() - 4, bReader.tell());
 			return;
 		}
 
@@ -292,17 +292,17 @@ void MOD::read(oishii::BinaryReader& bReader)
 			read_collisiongrid(bReader);
 			break;
 		default:
-			if (cDescriptor != 0xFFFF) // 0xFFFF is in every mod file, don't bother
-				DebugReport("Got chunk %04x, not implemented yet!\n", cDescriptor);
+			bReader.warnAt("Unimplemented chunk\n", bReader.tell() - 4, bReader.tell());
 			skipChunk(bReader, cLength);
 			break;
 		}
-	} while (cDescriptor != 0xFFFF);
+	}
 
 	if (bReader.tell() != bReader.endpos())
 	{
 		DebugReport("INI file found at end of file\n");
 	}
+
 	DebugReport("Done reading file\n");
 }
 
