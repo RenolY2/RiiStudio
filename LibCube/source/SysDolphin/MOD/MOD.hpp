@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MOD_Includes.hpp"
-#include "TXE/TXE.hpp"
+#include "SysDolphin/TXE/TXE.hpp"
 
 namespace libcube {
 

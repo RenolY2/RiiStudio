@@ -22,7 +22,7 @@
 #include <core/Plugin.hpp>
 #include <core/PluginFactory.hpp>
 
-#include "MOD/MOD.hpp"
+#include <SysDolphin/MOD/MOD.hpp>
 #include "Export/Exports.hpp"
 
 namespace pk1 = libcube::pikmin1;
