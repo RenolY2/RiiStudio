@@ -3,6 +3,23 @@
 
 namespace libcube { namespace pikmin1 {
 
+
+namespace {
+template<typename T>
+void readChunkDispatch(oishii::BinaryReader& reader, std::vector<T>& out)
+{
+	out.resize(reader.read<u32>());
+
+	skipPadding(reader);
+	for (auto& it : out)
+	{
+		bReader.dispatch<T, oishii::Direct, false>(it);
+	}
+	skipPadding(reader);
+}
+}
+
+
 void MOD::read_header(oishii::BinaryReader& bReader)
 {
 	skipPadding(bReader);
@@ -46,14 +63,7 @@ void MOD::read_vertexnormals(oishii::BinaryReader& bReader)
 void MOD::read_nbts(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading NBTs\n");
-	m_nbt.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& currNBT : m_nbt)
-	{
-		bReader.dispatch<NBT, oishii::Direct, false>(currNBT);
-	}
-	skipPadding(bReader);
+	readChunkDispatch<NBT>(bReader, m_nbt);
 }
 
 void MOD::read_vertexcolours(oishii::BinaryReader& bReader)
@@ -72,14 +82,7 @@ void MOD::read_vertexcolours(oishii::BinaryReader& bReader)
 void MOD::read_faces(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading faces\n");
-	m_batches.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& cBatch : m_batches)
-	{
-		bReader.dispatch<Batch, oishii::Direct, false>(cBatch);
-	}
-	skipPadding(bReader);
+	readChunkDispatch<Batch>(bReader, m_batches);
 }
 
 void MOD::read_textures(oishii::BinaryReader& bReader)
@@ -98,14 +101,7 @@ void MOD::read_textures(oishii::BinaryReader& bReader)
 void MOD::read_texattr(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading texture attributes!\n");
-	m_texattrs.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& texattr : m_texattrs)
-	{
-		bReader.dispatch<TexAttr, oishii::Direct, false>(texattr);
-	}
-	skipPadding(bReader);
+	readChunkDispatch<TexAttr>(bReader, m_texattrs);
 }
 
 void MOD::read_materials(oishii::BinaryReader& bReader)
@@ -168,40 +164,19 @@ void MOD::read_collisiongrid(oishii::BinaryReader& bReader)
 void MOD::read_vtxmatrix(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading vertex matrix\n");
-	m_vtxmatrices.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& vtxmatrix : m_vtxmatrices)
-	{
-		bReader.dispatch<VtxMatrix, oishii::Direct, false>(vtxmatrix);
-	}
-	skipPadding(bReader);
+	readChunkDispatch<VtxMatrix>(bReader, m_vtxmatrices);
 }
 
 void MOD::read_envelope(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading skinning envelope\n");
-	m_envelopes.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& evp : m_envelopes)
-	{
-		bReader.dispatch<Envelope, oishii::Direct, false>(evp);
-	}
-	skipPadding(bReader);
+	readChunkDispatch<Envelope>(bReader, m_envelopes);
 }
 
 void MOD::read_joints(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading joints\n");
-	m_joints.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& joint : m_joints)
-	{
-		bReader.dispatch<Joint, oishii::Direct, false>(joint);
-	}
-	skipPadding(bReader);
+	readChunkDispatch<Joint>(bReader, m_joints);
 }
 
 void MOD::read_jointnames(oishii::BinaryReader& bReader)
