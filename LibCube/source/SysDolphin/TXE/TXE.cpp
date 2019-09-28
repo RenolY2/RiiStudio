@@ -1,63 +1,28 @@
 #include "TXE.hpp"
 
-namespace libcube {
-
-namespace pikmin1 {
-
-/*void TXE::read(oishii::BinaryReader& bReader)
-{
-	m_width = bReader.read<u16>();
-	m_height = bReader.read<u16>();
-	m_format = (TXEFormats)bReader.read<u16>();
-	bReader.read<u16>(); // unused variable
-	m_dataSize = bReader.read<u32>();
-	m_imageData.resize(m_dataSize);
-
-	// Unsure as to why they do this, but its in the source code so lollage
-	for (u32 i = 0; i < 5; i++)
-		bReader.read<u32>();
-
-	for (auto& byte : m_imageData)
-		byte = bReader.read<u8>();
-}
-
-void TXE::readModFile(oishii::BinaryReader & bReader)
-{
-	m_width = bReader.read<u16>();
-	m_height = bReader.read<u16>();
-	m_format = (TXEFormats)bReader.read<u32>();
-	bReader.read<u32>();
-
-	for (u32 i = 0; i < 4; i++)
-		bReader.read<u32>();
-
-	m_dataSize = bReader.read<u32>();
-	m_imageData.resize(m_dataSize);
-	for (auto& byte : m_imageData)
-		byte = bReader.read<u8>();
-}*/
+namespace libcube { namespace pikmin1 {
 
 void TXE::onRead(oishii::BinaryReader& bReader, TXE& context)
 {
-	// we aren't at the start of the file
-	if (bReader.tell() != 0)
-	{
-		context.importModTXE(bReader);
-	}
-	// we're in a standalone txe file
-	else
-	{
-		context.importTXE(bReader);
-	}
+	context.importTXE(bReader);
 }
 
 void TXE::importTXE(oishii::BinaryReader& bReader)
 {
+	m_width = bReader.read<u16>();
+	m_height = bReader.read<u16>();
+	m_unk1 = bReader.read<u16>();
+	m_format = bReader.read<u16>();
 
-}
+	m_unk2 = bReader.read<u32>();
 
-void TXE::importModTXE(oishii::BinaryReader& bReader)
-{
+	for (u32 i = 0; i < 4; i++)
+		bReader.read<u32>(); // padding
+
+	m_imageData.resize(bReader.read<u32>());
+
+	for (auto& pixelData : m_imageData)
+		pixelData = bReader.read<u8>();
 }
 
 }
