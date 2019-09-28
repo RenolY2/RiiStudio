@@ -2,9 +2,7 @@
 
 #include "essential_functions.hpp"
 
-namespace libcube {
-
-namespace pikmin1 {
+namespace libcube { namespace pikmin1 {
 
 struct NBT
 {

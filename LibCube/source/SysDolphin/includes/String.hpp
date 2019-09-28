@@ -2,9 +2,7 @@
 
 #include "essential_functions.hpp"
 
-namespace libcube {
-
-namespace pikmin1 {
+namespace libcube { namespace pikmin1 {
 
 struct String {
 	constexpr static const char name[] = "Pikmin 1 String";

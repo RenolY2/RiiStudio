@@ -1,8 +1,7 @@
+#define OISHII_ALIGNMENT_CHECK 0
 #include "MOD.hpp"
 
-namespace libcube {
-
-namespace pikmin1 {
+namespace libcube { namespace pikmin1 {
 
 void MOD::read_header(oishii::BinaryReader& bReader)
 {

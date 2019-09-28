@@ -3,9 +3,7 @@
 #include "essential_functions.hpp"
 #include "Colour.hpp"
 
-namespace libcube {
-
-namespace pikmin1 {
+namespace libcube { namespace pikmin1 {
 
 struct Material
 {

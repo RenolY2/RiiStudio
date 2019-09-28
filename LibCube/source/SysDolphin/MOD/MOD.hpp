@@ -1,12 +1,9 @@
 #pragma once
-#define OISHII_ALIGNMENT_CHECK 0
 
 #include "../allincludes.hpp"
 #include "SysDolphin/TXE/TXE.hpp"
 
-namespace libcube {
-
-namespace pikmin1 {
+namespace libcube { namespace pikmin1 {
 
 enum class MODCHUNKS : u16
 {
