@@ -1,20 +1,22 @@
 #pragma once
 
 #include <oishii/reader/binary_reader.hxx>
+#include <SysDolphin/includes/essential_functions.hpp>
+
 #include <vector>
 
 namespace libcube { namespace pikmin1 {
 
 enum class TXEFormats : u16
 {
-	RGB565 = 0,
-	CMPR, // 1
-	RGB5A3, // 2
+	Rgb565 = 0,
+	Cmpr, // 1
+	Rgb5a3, // 2
 	I4, // 3
 	I8, // 4
-	IA4, // 5
-	IA8, // 6
-	RGBA8 //7
+	Ia4, // 5
+	Ia8, // 6
+	Rgba8 //7
 };
 
 struct TXE
@@ -22,8 +24,9 @@ struct TXE
 	u16 m_width = 0;
 	u16 m_height = 0;
 	u16 m_unk1 = 0;
-	u16 m_format = 0;
-	u32 m_unk2;
+	u16 m_formatShort = 0;
+	TXEFormats m_format;
+	u32 m_unk2 = 0;
 
 	std::vector<u8> m_imageData;
 
@@ -35,6 +38,7 @@ struct TXE
 	static void onRead(oishii::BinaryReader&, TXE&);
 
 	void importTXE(oishii::BinaryReader&);
+	void importMODTXE(oishii::BinaryReader&);
 };
 inline void read(oishii::BinaryReader& reader, TXE& clr)
 {

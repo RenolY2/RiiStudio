@@ -1,6 +1,7 @@
 #pragma once
 
 #include "essential_functions.hpp"
+#include <string>
 
 namespace libcube { namespace pikmin1 {
 

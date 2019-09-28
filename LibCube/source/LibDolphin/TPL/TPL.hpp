@@ -45,7 +45,6 @@ public:
 	// Index of texture/palette vectors
 	std::vector<std::pair<int, int>> mDescriptors;
 
-public:
 	static void onRead(oishii::BinaryReader& reader, DolphinTPL& ctx)
 	{
 		ctx.read(reader);
@@ -54,6 +53,5 @@ public:
 private:
 	void read(oishii::BinaryReader& reader);
 };
-
 
 }

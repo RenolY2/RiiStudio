@@ -1,5 +1,4 @@
 #include <FileDialogues.hpp>
-#include <fstream>
 
 #include <core/Applet.hpp>
 #include <ui/widgets/Dockspace.hpp>
@@ -8,15 +7,19 @@
 #include <core/Plugin.hpp>
 #include <core/PluginFactory.hpp>
 
-#include <SysDolphin/MOD/MOD.hpp>
 #include "Export/Exports.hpp"
+#include "SysDolphin/BTI/BTI.hpp"
+#include "SysDolphin/MOD/MOD.hpp"
+
+#include <fstream>
 
 namespace pk1 = libcube::pikmin1;
-static bool openModelFile()
+
+static bool openMODFile()
 {
 	auto selection = pfd::open_file("Select a file", ".", { "Pikmin 1 Model Files (*.mod)", "*.mod" }, false).result();
 	if (selection.empty()) // user has pressed cancel
-		return EXIT_FAILURE;
+		return false;
 
 	std::string fileName(selection[0]);
 	DebugReport("Opening file %s\n", fileName.c_str());
@@ -24,7 +27,7 @@ static bool openModelFile()
 	std::ifstream fStream(fileName, std::ios::binary | std::ios::ate);
 
 	if (!fStream.is_open())
-		return EXIT_FAILURE;
+		return false;
 
 	std::streamsize size = fStream.tellg();
 	fStream.seekg(0, std::ios::beg);
@@ -40,7 +43,67 @@ static bool openModelFile()
 	}
 
 	fStream.close();
-	return EXIT_SUCCESS;
+	return true;
+}
+static bool openBTIFile()
+{
+	auto selection = pfd::open_file("Select a file", ".", { "J3D Texture Files (*.bti)", "*.bti" }, false).result();
+	if (selection.empty()) // user has pressed cancel
+		return false;
+
+	std::string fileName(selection[0]);
+	DebugReport("Opening file %s\n", fileName.c_str());
+
+	std::ifstream fStream(fileName, std::ios::binary | std::ios::ate);
+
+	if (!fStream.is_open())
+		return false;
+
+	std::streamsize size = fStream.tellg();
+	fStream.seekg(0, std::ios::beg);
+
+	auto data = std::unique_ptr<char>(new char[size]);
+	if (fStream.read(data.get(), size))
+	{
+		oishii::BinaryReader reader(std::move(data), size, fileName.c_str());
+		reader.seekSet(0);
+
+		pk1::BTI bti;
+		reader.dispatch<pk1::BTI, oishii::Direct, false>(bti);
+	}
+
+	fStream.close();
+	return true;
+}
+static bool openTXEFile()
+{
+	auto selection = pfd::open_file("Select a file", ".", { "Pikmin 1 Texture Files (*.txe)", "*.txe" }, false).result();
+	if (selection.empty()) // user has pressed cancel
+		return false;
+
+	std::string fileName(selection[0]);
+	DebugReport("Opening file %s\n", fileName.c_str());
+
+	std::ifstream fStream(fileName, std::ios::binary | std::ios::ate);
+
+	if (!fStream.is_open())
+		return false;
+
+	std::streamsize size = fStream.tellg();
+	fStream.seekg(0, std::ios::beg);
+
+	auto data = std::unique_ptr<char>(new char[size]);
+	if (fStream.read(data.get(), size))
+	{
+		oishii::BinaryReader reader(std::move(data), size, fileName.c_str());
+		reader.seekSet(0);
+
+		pk1::TXE txe;
+		reader.dispatch<pk1::TXE, oishii::Direct, false>(txe);
+	}
+
+	fStream.close();
+	return true;
 }
 
 static inline int toIntComp(float src)
@@ -70,7 +133,9 @@ public:
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Open..", "Ctrl+O")) { openModelFile(); }
+				if (ImGui::MenuItem("Open MOD file", "Ctrl+O")) { openMODFile(); }
+				if (ImGui::MenuItem("Open BTI file", "Ctrl+O")) { openBTIFile(); }
+				if (ImGui::MenuItem("Open TXE file", "Ctrl+O")) { openTXEFile(); }
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();
@@ -123,6 +188,9 @@ void main()
 		plugin_factory->registerPlugin(libcube::PluginPackage);
 
 		editor->attachWindow(plugin_factory->create(".mod", 0x00000000));
+		editor->attachWindow(plugin_factory->create(".tpl", 0x0020AF30));
+		editor->attachWindow(plugin_factory->create(".txe", 0x00000001));
+		editor->attachWindow(plugin_factory->create(".bti", 0x00000002));
 
 		editor->frameLoop();
 	}
