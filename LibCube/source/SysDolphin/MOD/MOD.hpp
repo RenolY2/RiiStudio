@@ -102,17 +102,8 @@ struct MOD
 
 	// Reading
 	void read_header(oishii::BinaryReader&);
-
-	void read_vertices(oishii::BinaryReader&); // opcode 0x10
-	void read_vertexnormals(oishii::BinaryReader&); // opcode 0x11
-	void read_nbts(oishii::BinaryReader&); // opcode 0x12
-	void read_vertexcolours(oishii::BinaryReader&); // opcode 0x13
-
 	void read_texcoords(oishii::BinaryReader&, u32); // opcode 0x18 - 0x1F
-	void read_textures(oishii::BinaryReader&); // opcode 0x20
-	void read_materials(oishii::BinaryReader&); // opcode 0x30
 
-	void read_jointnames(oishii::BinaryReader&); // opcode 0x61
 	void read_basecolltriinfo(oishii::BinaryReader&); // opcode 0x100
 	void read_collisiongrid(oishii::BinaryReader&); // opcode 0x110
 

@@ -18,72 +18,6 @@ void MOD::read_header(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::read_vertices(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading vertices\n");
-	m_vertices.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& vertex : m_vertices)
-	{
-		read(bReader, vertex);
-	}
-	skipPadding(bReader);
-}
-
-void MOD::read_vertexnormals(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading vertex normals\n");
-	m_vnorms.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& vnorm : m_vnorms)
-	{
-		read(bReader, vnorm);
-	}
-	skipPadding(bReader);
-}
-
-void MOD::read_vertexcolours(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading mesh colours\n");
-	m_colours.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& colour : m_colours)
-	{
-		readChunk(bReader, colour);
-	}
-	skipPadding(bReader);
-}
-
-
-void MOD::read_textures(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading textures\n");
-	m_textures.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& texture : m_textures)
-	{
-		bReader.dispatch<TXE, oishii::Direct, false>(texture);
-	}
-	skipPadding(bReader);
-}
-
-void MOD::read_materials(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading materials!\n");
-	m_materials.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& material : m_materials)
-	{
-		material.read(bReader);
-	}
-	skipPadding(bReader);
-}
-
 void MOD::read_texcoords(oishii::BinaryReader& bReader, u32 opcode)
 {
 	const u32 texIndex = opcode - 0x18;
@@ -125,19 +59,6 @@ void MOD::read_collisiongrid(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 	// TODO: find a way to implement a std::vector so it fits in with every other chunk
 	bReader.dispatch<CollGroup, oishii::Direct, false>(m_collisionGrid);
-	skipPadding(bReader);
-}
-
-void MOD::read_jointnames(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading joint names\n");
-	m_jointNames.resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& name : m_jointNames)
-	{
-		bReader.dispatch<String, oishii::Direct, false>(name);
-	}
 	skipPadding(bReader);
 }
 
@@ -186,7 +107,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			read_texcoords(bReader, cDescriptor);
 			break;
 		case MODCHUNKS::MOD_TEXTURE:
-			read_textures(bReader);
+			readChunk(bReader, m_textures);
 			break;
 		case MODCHUNKS::MOD_TEXTURE_ATTRIBUTE:
 			readChunk(bReader, m_texattrs);
@@ -204,7 +125,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			readChunk(bReader, m_joints);
 			break;
 		case MODCHUNKS::MOD_JOINT_NAME:
-			read_jointnames(bReader);
+			readChunk(bReader, m_jointNames);
 			break;
 		case MODCHUNKS::MOD_COLLISION_TRIANGLE:
 			read_basecolltriinfo(bReader);

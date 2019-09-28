@@ -20,6 +20,11 @@ struct String {
 		context.m_str = nameString;
 	}
 };
+inline void read(oishii::BinaryReader& bReader, String& context)
+{
+	bReader.dispatch<String, oishii::Direct, false>(context);
+}
+
 
 }
 

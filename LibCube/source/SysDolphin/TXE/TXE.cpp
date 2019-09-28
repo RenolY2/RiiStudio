@@ -39,7 +39,25 @@ void TXE::readModFile(oishii::BinaryReader & bReader)
 
 void TXE::onRead(oishii::BinaryReader& bReader, TXE& context)
 {
+	// we aren't at the start of the file
+	if (bReader.tell() != 0)
+	{
+		context.importModTXE(bReader);
+	}
+	// we're in a standalone txe file
+	else
+	{
+		context.importTXE(bReader);
+	}
+}
 
+void TXE::importTXE(oishii::BinaryReader& bReader)
+{
+
+}
+
+void TXE::importModTXE(oishii::BinaryReader& bReader)
+{
 }
 
 }

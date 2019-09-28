@@ -39,7 +39,7 @@ struct Colour
 };
 inline void read(oishii::BinaryReader& reader, Colour& clr)
 {
-	clr.read(reader);
+	reader.dispatch<Colour, oishii::Direct, false>(clr);
 }
 
 }

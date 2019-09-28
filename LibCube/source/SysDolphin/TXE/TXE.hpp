@@ -33,7 +33,14 @@ struct TXE
 	constexpr static const char name[] = "Pikmin 1 Texture File";
 
 	static void onRead(oishii::BinaryReader&, TXE&);
+
+	void importTXE(oishii::BinaryReader&);
+	void importModTXE(oishii::BinaryReader&);
 };
+inline void read(oishii::BinaryReader& reader, TXE& clr)
+{
+	reader.dispatch<TXE, oishii::Direct, false>(clr);
+}
 
 }
 
