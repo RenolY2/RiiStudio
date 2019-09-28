@@ -58,6 +58,13 @@ void operator<< <f32, 2>(glm::vec2& out, oishii::BinaryReader& reader)
 	out.y = reader.read<f32>();
 }
 
+// abstraction of dispatch
+template<typename T>
+inline void readChunk(oishii::BinaryReader& reader, T& out)
+{
+	reader.dispatch<T, oishii::Direct, false>(out);
+}
+
 }
 
 }

@@ -7,7 +7,7 @@ namespace libcube {
 
 namespace pikmin1 {
 
-enum TXEFormats
+enum class TXEFormats : u16
 {
 	RGB565 = 0,
 	CMPR, // 1
@@ -23,18 +23,16 @@ struct TXE
 {
 	u16 m_width = 0;
 	u16 m_height = 0;
-	TXEFormats m_format;
+	u16 m_format;
 	u32 m_dataSize = 0;
 	std::vector<u8> m_imageData;
 
 	TXE() = default;
 	~TXE() = default;
 
-	constexpr static const char name[] = "TeXturE file (TXE)";
+	constexpr static const char name[] = "Pikmin 1 Texture File";
 
-	void read(oishii::BinaryReader&);
-	void readModFile(oishii::BinaryReader&);
-
+	static void onRead(oishii::BinaryReader&, TXE&);
 };
 
 }

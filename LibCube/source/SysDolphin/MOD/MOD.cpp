@@ -52,7 +52,7 @@ void MOD::read_vertexcolours(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 	for (auto& colour : m_colours)
 	{
-		colour.read(bReader);
+		readChunk(bReader, colour);
 	}
 	skipPadding(bReader);
 }
@@ -66,7 +66,7 @@ void MOD::read_textures(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 	for (auto& texture : m_textures)
 	{
-		texture.readModFile(bReader);
+		bReader.dispatch<TXE, oishii::Direct, false>(texture);
 	}
 	skipPadding(bReader);
 }
@@ -141,12 +141,6 @@ void MOD::read_jointnames(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-template<typename T>
-inline void readChunk(oishii::BinaryReader& reader, T& out)
-{
-	reader.dispatch<T, oishii::Direct, false>(out);
-}
-
 void MOD::parse(oishii::BinaryReader& bReader)
 {	
 	bReader.setEndian(true); // big endian
@@ -204,7 +198,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			readChunk(bReader, m_envelopes);
 			break;
 		case MODCHUNKS::MOD_MESH:
-			readChunk(bReader, m_meshes);
+			readChunk(bReader, m_batches);
 			break;
 		case MODCHUNKS::MOD_JOINT:
 			readChunk(bReader, m_joints);

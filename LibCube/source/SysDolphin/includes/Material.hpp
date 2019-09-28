@@ -18,7 +18,7 @@ struct Material
 	{
 		m_hasPE = bReader.read<u32>();
 		m_unk2 = bReader.read<u32>();
-		m_unkColour1.read(bReader);
+		readChunk(bReader, m_unkColour1);
 
 		if (m_hasPE & 1)
 		{

@@ -4,7 +4,7 @@ namespace libcube {
 
 namespace pikmin1 {
 
-void TXE::read(oishii::BinaryReader& bReader)
+/*void TXE::read(oishii::BinaryReader& bReader)
 {
 	m_width = bReader.read<u16>();
 	m_height = bReader.read<u16>();
@@ -35,6 +35,11 @@ void TXE::readModFile(oishii::BinaryReader & bReader)
 	m_imageData.resize(m_dataSize);
 	for (auto& byte : m_imageData)
 		byte = bReader.read<u8>();
+}*/
+
+void TXE::onRead(oishii::BinaryReader& bReader, TXE& context)
+{
+
 }
 
 }
