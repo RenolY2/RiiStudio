@@ -20,6 +20,9 @@ struct NBT
 	}
 };
 
+inline void read(oishii::BinaryReader& reader, NBT& nbt)
+{
+	reader.dispatch<NBT, oishii::Direct, false>(nbt);
 }
 
-}
+} }

@@ -37,7 +37,10 @@ struct Colour
 		m_A = ((lerpTo.m_A - m_A) * t + m_A);
 	}
 };
-
+inline void read(oishii::BinaryReader& reader, Colour& clr)
+{
+	clr.read(reader);
+}
 
 }
 

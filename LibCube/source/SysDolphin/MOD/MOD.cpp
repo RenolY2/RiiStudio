@@ -189,7 +189,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			read_textures(bReader);
 			break;
 		case MODCHUNKS::MOD_TEXTURE_ATTRIBUTE:
-			read_texattr(bReader);
+			readChunk(bReader, m_texattrs);
 			break;
 		case MODCHUNKS::MOD_VTXMATRIX:
 			readChunk(bReader, m_vtxmatrices);

@@ -35,6 +35,9 @@ struct TexAttr
 	}
 };
 
+inline void read(oishii::BinaryReader& reader, TexAttr& attr)
+{
+	reader.dispatch<TexAttr, oishii::Direct, false>(attr);
 }
 
-}
+} }
