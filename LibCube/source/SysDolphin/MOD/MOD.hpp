@@ -102,7 +102,6 @@ struct MOD
 
 	// Reading
 	void read_header(oishii::BinaryReader&);
-	void read_texcoords(oishii::BinaryReader&, u32); // opcode 0x18 - 0x1F
 
 	void read_basecolltriinfo(oishii::BinaryReader&); // opcode 0x100
 	void read_collisiongrid(oishii::BinaryReader&); // opcode 0x110

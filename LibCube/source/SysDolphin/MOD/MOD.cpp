@@ -18,20 +18,6 @@ void MOD::read_header(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::read_texcoords(oishii::BinaryReader& bReader, u32 opcode)
-{
-	const u32 texIndex = opcode - 0x18;
-	DebugReport("Reading texcoord%d\n", texIndex);
-	m_texcoords[texIndex].resize(bReader.read<u32>());
-
-	skipPadding(bReader);
-	for (auto& coords : m_texcoords[texIndex])
-	{
-		coords << bReader;
-	}
-	skipPadding(bReader);
-}
-
 void MOD::read_basecolltriinfo(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading collision triangle information\n");
@@ -66,11 +52,11 @@ void MOD::parse(oishii::BinaryReader& bReader)
 {	
 	bReader.setEndian(true); // big endian
 
-	for (u32 cDescriptor = 0;
-		cDescriptor != 0xFFFF; )
+	u32 cDescriptor = 0;
+
+	while ((cDescriptor = bReader.read<u32>()) != (u16)-1)
 	{
-		const u32 cStart = bReader.tell(); // get the offset of the chunk start
-		cDescriptor = bReader.read<u32>();
+		const u32 cStart = bReader.tell() - 4; // get the offset of the chunk start
 		const u32 cLength = bReader.read<u32>();
 
 		if (cStart & 0x1f)
@@ -104,7 +90,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 		case MODCHUNKS::MOD_TEXCOORD5:
 		case MODCHUNKS::MOD_TEXCOORD6:
 		case MODCHUNKS::MOD_TEXCOORD7:
-			read_texcoords(bReader, cDescriptor);
+			readChunk(bReader, m_texcoords[cDescriptor - (int)MODCHUNKS::MOD_TEXCOORD0]);
 			break;
 		case MODCHUNKS::MOD_TEXTURE:
 			readChunk(bReader, m_textures);
@@ -151,6 +137,4 @@ void MOD::parse(oishii::BinaryReader& bReader)
 	DebugReport("Done reading file\n");
 }
 
-} // pikmin1
-
-} // libcube
+} } // libcube::pikmin1
