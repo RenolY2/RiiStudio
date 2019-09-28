@@ -18,7 +18,10 @@ struct Colour
 		m_A = bReader.read<u8>();
 	}
 };
-
+inline void read(oishii::BinaryReader& reader, Colour& clr)
+{
+	clr.read(reader);
+}
 
 }
 

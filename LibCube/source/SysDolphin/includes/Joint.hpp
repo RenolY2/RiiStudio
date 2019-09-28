@@ -49,6 +49,9 @@ struct Joint
 	}
 };
 
+inline void read(oishii::BinaryReader& reader, Joint& evp)
+{
+	reader.dispatch<Joint, oishii::Direct, false>(evp);
 }
 
-}
+} }

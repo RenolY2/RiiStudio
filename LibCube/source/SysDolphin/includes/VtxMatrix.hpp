@@ -18,6 +18,9 @@ struct VtxMatrix
 	}
 };
 
+inline void read(oishii::BinaryReader& reader, VtxMatrix& context)
+{
+	reader.dispatch<VtxMatrix, oishii::Direct, false>(context);
 }
 
-}
+} }

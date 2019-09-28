@@ -43,6 +43,9 @@ struct Batch
 	}
 };
 
+inline void read(oishii::BinaryReader& reader, Batch& evp)
+{
+	reader.dispatch<Batch, oishii::Direct, false>(evp);
 }
 
-}
+} }

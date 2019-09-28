@@ -24,6 +24,11 @@ struct Envelope
 	}
 };
 
+inline void read(oishii::BinaryReader& reader, Envelope& evp)
+{
+	reader.dispatch<Envelope, oishii::Direct, false>(evp);
+}
+
 }
 
 }

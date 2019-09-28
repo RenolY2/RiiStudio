@@ -110,7 +110,6 @@ struct MOD
 
 	void read_texcoords(oishii::BinaryReader&, u32); // opcode 0x18 - 0x1F
 	void read_textures(oishii::BinaryReader&); // opcode 0x20
-	void read_texattr(oishii::BinaryReader&); // opcode 0x22
 	void read_materials(oishii::BinaryReader&); // opcode 0x30
 
 	void read_jointnames(oishii::BinaryReader&); // opcode 0x61
