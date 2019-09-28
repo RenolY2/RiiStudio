@@ -4,22 +4,6 @@
 namespace libcube { namespace pikmin1 {
 
 
-namespace {
-template<typename T>
-void readChunkDispatch(oishii::BinaryReader& reader, std::vector<T>& out)
-{
-	out.resize(reader.read<u32>());
-
-	skipPadding(reader);
-	for (auto& it : out)
-	{
-		bReader.dispatch<T, oishii::Direct, false>(it);
-	}
-	skipPadding(reader);
-}
-}
-
-
 void MOD::read_header(oishii::BinaryReader& bReader)
 {
 	skipPadding(bReader);
@@ -60,12 +44,6 @@ void MOD::read_vertexnormals(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::read_nbts(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading NBTs\n");
-	readChunkDispatch<NBT>(bReader, m_nbt);
-}
-
 void MOD::read_vertexcolours(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading mesh colours\n");
@@ -79,11 +57,6 @@ void MOD::read_vertexcolours(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::read_faces(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading faces\n");
-	readChunkDispatch<Batch>(bReader, m_batches);
-}
 
 void MOD::read_textures(oishii::BinaryReader& bReader)
 {
@@ -96,12 +69,6 @@ void MOD::read_textures(oishii::BinaryReader& bReader)
 		texture.readModFile(bReader);
 	}
 	skipPadding(bReader);
-}
-
-void MOD::read_texattr(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading texture attributes!\n");
-	readChunkDispatch<TexAttr>(bReader, m_texattrs);
 }
 
 void MOD::read_materials(oishii::BinaryReader& bReader)
@@ -126,7 +93,7 @@ void MOD::read_texcoords(oishii::BinaryReader& bReader, u32 opcode)
 	skipPadding(bReader);
 	for (auto& coords : m_texcoords[texIndex])
 	{
-		read(bReader, coords);
+		coords << bReader;
 	}
 	skipPadding(bReader);
 }
@@ -161,24 +128,6 @@ void MOD::read_collisiongrid(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::read_vtxmatrix(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading vertex matrix\n");
-	readChunkDispatch<VtxMatrix>(bReader, m_vtxmatrices);
-}
-
-void MOD::read_envelope(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading skinning envelope\n");
-	readChunkDispatch<Envelope>(bReader, m_envelopes);
-}
-
-void MOD::read_joints(oishii::BinaryReader& bReader)
-{
-	DebugReport("Reading joints\n");
-	readChunkDispatch<Joint>(bReader, m_joints);
-}
-
 void MOD::read_jointnames(oishii::BinaryReader& bReader)
 {
 	DebugReport("Reading joint names\n");
@@ -190,6 +139,12 @@ void MOD::read_jointnames(oishii::BinaryReader& bReader)
 		bReader.dispatch<String, oishii::Direct, false>(name);
 	}
 	skipPadding(bReader);
+}
+
+template<typename T>
+inline void readChunk(oishii::BinaryReader& reader, T& out)
+{
+	reader.dispatch<T, oishii::Direct, false>(out);
 }
 
 void MOD::parse(oishii::BinaryReader& bReader)
@@ -215,16 +170,16 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			read_header(bReader);
 			break;
 		case MODCHUNKS::MOD_VERTEX:
-			read_vertices(bReader);
+			readChunk(bReader, m_vertices);
 			break;
 		case MODCHUNKS::MOD_VERTEXNORMAL:
-			read_vertexnormals(bReader);
+			readChunk(bReader, m_vnorms);
 			break;
 		case MODCHUNKS::MOD_NBT:
-			read_nbts(bReader);
+			readChunk(bReader, m_nbt);
 			break;
 		case MODCHUNKS::MOD_VERTEXCOLOUR:
-			read_vertexcolours(bReader);
+			readChunk(bReader, m_colours);
 			break;
 		case MODCHUNKS::MOD_TEXCOORD0:
 		case MODCHUNKS::MOD_TEXCOORD1:
@@ -243,16 +198,16 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			read_texattr(bReader);
 			break;
 		case MODCHUNKS::MOD_VTXMATRIX:
-			read_vtxmatrix(bReader);
+			readChunk(bReader, m_vtxmatrices);
 			break;
 		case MODCHUNKS::MOD_ENVELOPE:
-			read_envelope(bReader);
+			readChunk(bReader, m_envelopes);
 			break;
 		case MODCHUNKS::MOD_MESH:
-			read_faces(bReader);
+			readChunk(bReader, m_meshes);
 			break;
 		case MODCHUNKS::MOD_JOINT:
-			read_joints(bReader);
+			readChunk(bReader, m_joints);
 			break;
 		case MODCHUNKS::MOD_JOINT_NAME:
 			read_jointnames(bReader);

@@ -47,19 +47,54 @@ struct MOD
 		int m_unk = 0;
 	} m_header;
 
-	std::vector<glm::vec3> m_vertices; // vertices
-	std::vector<glm::vec3> m_vnorms; // vertex normals
-	std::vector<NBT> m_nbt; // unknown, to do with vertices
-	std::vector<Colour> m_colours; // vertex colours
-	std::vector<VtxMatrix> m_vtxmatrices; // vertex matrices
-	std::vector<Batch> m_batches; // meshes
-	std::vector<Joint> m_joints; // joints
-	std::vector<String> m_jointNames; // joint names
-	std::vector<TXE> m_textures; // textures
-	std::vector<glm::vec2> m_texcoords[8]; // texture coordinates 0 - 7, x = s, y  = t
-	std::vector<TexAttr> m_texattrs; // texture attributes
-	std::vector<Material> m_materials; // texture environments
-	std::vector<Envelope> m_envelopes; // skinning envelopes
+	template<typename T, const char N[]>
+	struct Holder : public std::vector<T>
+	{
+		static constexpr const char* name = N;
+
+		static void onRead(oishii::BinaryReader& reader, Holder& out)
+		{
+			out.resize(reader.read<u32>());
+
+			skipPadding(reader);
+
+			for (auto& it : out)
+				read(reader, it);
+
+				skipPadding(reader);
+		}
+	};
+
+	struct Names
+	{
+		static constexpr char vertices[] = "Vertices";
+		static constexpr char normals[] = "Normals";
+		static constexpr char nbt[] = "NBT";
+		static constexpr char colours[] = "Colors";
+		static constexpr char vtxmatrices[] = "Vertex Matrices";
+		static constexpr char batches[] = "Batches";
+		static constexpr char joints[] = "Joints";
+		static constexpr char jointnames[] = "Joint Names";
+		static constexpr char textures[] = "Textures";
+		static constexpr char texcoords[] = "Texture Coordinates";
+		static constexpr char texattribs[] = "Texture Attributes";
+		static constexpr char materials[] = "Materials";
+		static constexpr char envelope[] = "Skinning Envelope";
+	};
+
+	Holder<glm::vec3, Names::vertices> m_vertices; // vertices
+	Holder<glm::vec3, Names::normals> m_vnorms; // vertex normals
+	Holder<NBT, Names::nbt> m_nbt; // vertex nbt vectors
+	Holder<Colour, Names::colours> m_colours; // vertex colours
+	Holder<VtxMatrix, Names::vtxmatrices> m_vtxmatrices; // vertex matrices
+	Holder<Batch, Names::batches> m_batches; // meshes
+	Holder<Joint, Names::joints> m_joints; // joints
+	Holder<String, Names::jointnames> m_jointNames; // joint names
+	Holder<TXE, Names::textures> m_textures; // textures
+	Holder<glm::vec2, Names::texcoords> m_texcoords[8]; // texture coordinates 0 - 7, x = s, y  = t
+	Holder<TexAttr, Names::texattribs> m_texattrs; // texture attributes
+	Holder<Material, Names::materials> m_materials; // texture environments
+	Holder<Envelope, Names::envelope> m_envelopes; // skinning envelopes
 
 	std::vector<BaseCollTriInfo> m_baseCollTriInfo;
 	std::vector<BaseRoomInfo> m_baseRoomInfo;
@@ -78,10 +113,6 @@ struct MOD
 	void read_texattr(oishii::BinaryReader&); // opcode 0x22
 	void read_materials(oishii::BinaryReader&); // opcode 0x30
 
-	void read_vtxmatrix(oishii::BinaryReader&); // opcode 0x40
-	void read_envelope(oishii::BinaryReader&); // opcode 0x41
-	void read_faces(oishii::BinaryReader&); // opcode 0x50
-	void read_joints(oishii::BinaryReader&); // opcode 0x60
 	void read_jointnames(oishii::BinaryReader&); // opcode 0x61
 	void read_basecolltriinfo(oishii::BinaryReader&); // opcode 0x100
 	void read_collisiongrid(oishii::BinaryReader&); // opcode 0x110

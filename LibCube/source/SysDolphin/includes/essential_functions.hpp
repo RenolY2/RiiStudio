@@ -41,6 +41,22 @@ inline void read<f32, 2>(oishii::BinaryReader& reader, glm::vec2& out)
 	out.x = reader.read<f32>();
 	out.y = reader.read<f32>();
 }
+template<typename TComponent, int TComponentCount>
+void operator<<(oishii::BinaryReader& reader, glm::vec<TComponentCount, TComponent, glm::defaultp>& out);
+
+template<>
+void operator<< <f32, 3>(oishii::BinaryReader& reader, glm::vec3& out)
+{
+	out.x = reader.read<f32>();
+	out.y = reader.read<f32>();
+	out.z = reader.read<f32>();
+}
+template<>
+void operator<< <f32, 2>(oishii::BinaryReader& reader, glm::vec2& out)
+{
+	out.x = reader.read<f32>();
+	out.y = reader.read<f32>();
+}
 
 }
 
