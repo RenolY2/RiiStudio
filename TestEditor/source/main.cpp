@@ -122,7 +122,7 @@ void main()
 
 		plugin_factory->registerPlugin(libcube::PluginPackage);
 
-		editor->attachWindow(plugin_factory->create(".tpl", 0x0020AF30));
+		editor->attachWindow(plugin_factory->create(".mod", 0x00000000));
 
 		editor->frameLoop();
 	}
