@@ -19,17 +19,14 @@ enum TXEFormats
 	RGBA8 //7
 };
 
-class TXE final
+struct TXE
 {
-private:
 	u16 m_width = 0;
 	u16 m_height = 0;
 	TXEFormats m_format;
 	u32 m_dataSize = 0;
 	std::vector<u8> m_imageData;
 
-
-public:
 	TXE() = default;
 	~TXE() = default;
 

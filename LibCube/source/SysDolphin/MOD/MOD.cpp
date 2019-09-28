@@ -1,4 +1,3 @@
-#define OISHII_ALIGNMENT_CHECK 0
 #include "MOD.hpp"
 
 namespace libcube {
@@ -223,19 +222,20 @@ void MOD::parse(oishii::BinaryReader& bReader)
 {	
 	bReader.setEndian(true); // big endian
 
-	for (MODCHUNKS cDescriptor = MODCHUNKS::MOD_HEADER;
-		cDescriptor = (MODCHUNKS)bReader.read<u32>();
-		cDescriptor != 0xFFFF)
+	for (u32 cDescriptor = 0;
+		cDescriptor != 0xFFFF; )
 	{
+		const u32 cStart = bReader.tell(); // get the offset of the chunk start
+		cDescriptor = bReader.read<u32>();
 		const u32 cLength = bReader.read<u32>();
 
-		if ((bReader.tell() - 4) & 0x1f)
+		if (cStart & 0x1f)
 		{
-			bReader.warnAt("bReader.tell() isn't aligned with 0x20! ERROR!\n", bReader.tell() - 4, bReader.tell());
+			bReader.warnAt("bReader.tell() isn't aligned with 0x20! ERROR!\n", cStart - 4 , cStart);
 			return;
 		}
 
-		switch (cDescriptor)
+		switch (static_cast<MODCHUNKS>(cDescriptor))
 		{
 		case MODCHUNKS::MOD_HEADER:
 			read_header(bReader);
@@ -289,8 +289,11 @@ void MOD::parse(oishii::BinaryReader& bReader)
 		case MODCHUNKS::MOD_COLLISION_GRID:
 			read_collisiongrid(bReader);
 			break;
+
+		case MODCHUNKS::MOD_EOF: // caught because it's not a valid chunk to read, so don't even bother warning user and just break
+			break;
 		default:
-			bReader.warnAt("Unimplemented chunk\n", bReader.tell() - 4, bReader.tell());
+			bReader.warnAt("Unimplemented chunk\n", cStart, cStart + 4);
 			skipChunk(bReader, cLength);
 			break;
 		}

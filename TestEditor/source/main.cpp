@@ -15,14 +15,13 @@ namespace pk1 = libcube::pikmin1;
 static bool openModelFile()
 {
 	auto selection = pfd::open_file("Select a file", ".", { "Pikmin 1 Model Files (*.mod)", "*.mod" }, false).result();
-	if (selection.empty()) // user has pressed cancel or did not properly enter a file
+	if (selection.empty()) // user has pressed cancel
 		return EXIT_FAILURE;
 
-	std::string fileName = selection[0];
+	std::string fileName(selection[0]);
 	DebugReport("Opening file %s\n", fileName.c_str());
 
-	std::ifstream fStream;
-	fStream.open(fileName, std::ios::binary | std::ios::ate);
+	std::ifstream fStream(fileName, std::ios::binary | std::ios::ate);
 
 	if (!fStream.is_open())
 		return EXIT_FAILURE;
@@ -30,10 +29,12 @@ static bool openModelFile()
 	std::streamsize size = fStream.tellg();
 	fStream.seekg(0, std::ios::beg);
 
-	auto data = std::unique_ptr<char>(new char[static_cast<u32>(size)]);
+	auto data = std::unique_ptr<char>(new char[size]);
 	if (fStream.read(data.get(), size))
 	{
-		oishii::BinaryReader reader(std::move(data), static_cast<u32>(size), fileName.c_str());
+		oishii::BinaryReader reader(std::move(data), size, fileName.c_str());
+		reader.seekSet(0); // reset offset inside file for reading (isn't inside bundle so this is OK)
+
 		pk1::MOD modelFile;
 		modelFile.parse(reader);
 	}

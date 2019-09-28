@@ -1,13 +1,14 @@
 #pragma once
+#define OISHII_ALIGNMENT_CHECK 0
 
-#include "MOD_Includes.hpp"
+#include "../allincludes.hpp"
 #include "SysDolphin/TXE/TXE.hpp"
 
 namespace libcube {
 
 namespace pikmin1 {
 
-enum MODCHUNKS
+enum class MODCHUNKS : u16
 {
 	MOD_HEADER = 0x0000,
 
@@ -36,6 +37,7 @@ enum MODCHUNKS
 	MOD_JOINT_NAME = 0x0061,
 	MOD_COLLISION_TRIANGLE = 0x0100,
 	MOD_COLLISION_GRID = 0x0110,
+	MOD_EOF = 0xFFFF
 };
 
 struct MOD
