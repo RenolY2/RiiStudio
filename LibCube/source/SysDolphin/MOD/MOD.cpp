@@ -220,14 +220,12 @@ void MOD::read_jointnames(oishii::BinaryReader& bReader)
 }
 
 void MOD::parse(oishii::BinaryReader& bReader)
-{
-	
+{	
 	bReader.setEndian(true); // big endian
 
-	bReader.seekSet(0); // reset file pointer position
-	// FIXME: ^^ Move to caller code -- MOD files may be embedded in an archive or other stream
-
-	for (u32 cDescriptor = 0; cDescriptor = bReader.read<u32>(); cDescriptor != 0xFFFF)
+	for (MODCHUNKS cDescriptor = MODCHUNKS::MOD_HEADER;
+		cDescriptor = (MODCHUNKS)bReader.read<u32>();
+		cDescriptor != 0xFFFF)
 	{
 		const u32 cLength = bReader.read<u32>();
 
