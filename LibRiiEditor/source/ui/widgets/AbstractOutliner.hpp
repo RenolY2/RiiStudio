@@ -53,7 +53,29 @@ struct ImTFilter : public ImGuiTextFilter
 	}
 };
 
-template<SelectionManager::Type ESelection, typename TConfig = AbstractOutlinerConfigDefault, typename TFilter = ImTFilter>
+template<typename T>
+struct VectorSampler
+{
+	bool empty() const noexcept
+	{
+		return data.empty();
+	}
+	u32 size() const noexcept
+	{
+		return data.size();
+	}
+	const char* nameAt(u32 idx) const noexcept
+	{
+		return data[idx].getName();
+	}
+	void* rawAt(u32 idx) const noexcept
+	{
+		return &data[idx];
+	}
+	std::vector<T>& data;
+};
+
+template<class TSampler, SelectionManager::Type ESelection = SelectionManager::Type::Texture, typename TConfig = AbstractOutlinerConfigDefault, class TFilter = ImTFilter>
 struct AbstractOutlinerFolder
 {
 	AbstractOutlinerFolder() = default;
