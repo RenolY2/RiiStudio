@@ -30,9 +30,9 @@ struct MtxGroup
 		}
 	}
 };
-inline void read(oishii::BinaryReader& reader, MtxGroup& evp)
+inline void operator<<(MtxGroup& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<MtxGroup, oishii::Direct, false>(evp);
+	bReader.dispatch<MtxGroup, oishii::Direct, false>(context);
 }
 
 }

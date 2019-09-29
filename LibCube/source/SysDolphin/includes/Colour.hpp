@@ -28,19 +28,11 @@ struct Colour
 		m_B = _b;
 		m_A = _a;
 	}
-
-	// function below was decompiled from sysCore.dll
-	void lerp(Colour& lerpTo, float t)
-	{
-		m_R = ((lerpTo.m_R - m_R) * t + m_R);
-		m_G = ((lerpTo.m_G - m_G) * t + m_G);
-		m_B = ((lerpTo.m_B - m_B) * t + m_B);
-		m_A = ((lerpTo.m_A - m_A) * t + m_A);
-	}
 };
-inline void read(oishii::BinaryReader& reader, Colour& clr)
+
+inline void operator<<(Colour& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<Colour, oishii::Direct, false>(clr);
+	bReader.dispatch<Colour, oishii::Direct, false>(context);
 }
 
 struct ShortColour
@@ -67,9 +59,10 @@ struct ShortColour
 		m_A = _a;
 	}
 };
-inline void read(oishii::BinaryReader& reader, ShortColour& clr)
+
+inline void operator<<(ShortColour& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<ShortColour, oishii::Direct, false>(clr);
+	bReader.dispatch<ShortColour, oishii::Direct, false>(context);
 }
 
 }

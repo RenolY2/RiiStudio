@@ -59,7 +59,7 @@ struct MOD
 			skipPadding(reader);
 
 			for (auto& it : out)
-				read(reader, it);
+				it << reader;
 
 			skipPadding(reader);
 		}

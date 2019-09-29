@@ -27,9 +27,9 @@ struct Envelope
 	}
 };
 
-inline void read(oishii::BinaryReader& reader, Envelope& evp)
+inline void operator<<(Envelope& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<Envelope, oishii::Direct, false>(evp);
+	bReader.dispatch<Envelope, oishii::Direct, false>(context);
 }
 
 }

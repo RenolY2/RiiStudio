@@ -6,9 +6,9 @@ void libcube::pikmin1::DCA::onRead(oishii::BinaryReader& bReader, DCA& context)
 {
 	context.m_numJoints = bReader.read<u32>();
 	context.m_numFrames = bReader.read<u32>();
-	read(bReader, context.m_scaling);
-	read(bReader, context.m_rotation);
-	read(bReader, context.m_translation);
+	context.m_scaling << bReader;
+	context.m_rotation << bReader;
+	context.m_translation << bReader;
 
 	context.m_joints.resize(context.m_numJoints);
 	for (auto& joint : context.m_joints)

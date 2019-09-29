@@ -35,12 +35,13 @@ struct BaseCollTriInfo
 		context.m_unk7 = bReader.read<u16>();
 		context.m_unk8 = bReader.read<u16>();
 
-		read(bReader, context.m_unk9);
+		context.m_unk9 << bReader;
 	}
 };
-inline void read(oishii::BinaryReader& reader, BaseCollTriInfo& clr)
+
+inline void operator<<(BaseCollTriInfo& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<BaseCollTriInfo, oishii::Direct, false>(clr);
+	bReader.dispatch<BaseCollTriInfo, oishii::Direct, false>(context);
 }
 
 }

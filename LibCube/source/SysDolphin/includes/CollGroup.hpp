@@ -23,7 +23,7 @@ struct CollGroup
 	{
 		skipPadding(bReader);
 
-		read(bReader, context.m_collBounds);
+		context.m_collBounds << bReader;
 		context.m_unk1 = bReader.read<f32>();
 		context.m_unkCount1 = bReader.read<u32>();
 		context.m_unkCount2 = bReader.read<u32>();
@@ -59,9 +59,10 @@ struct CollGroup
 		skipPadding(bReader);
 	}
 };
-inline void read(oishii::BinaryReader& reader, CollGroup& clr)
+
+inline void operator<<(CollGroup& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<CollGroup, oishii::Direct, false>(clr);
+	bReader.dispatch<CollGroup, oishii::Direct, false>(context);
 }
 
 }

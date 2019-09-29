@@ -108,7 +108,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 			read_basecolltriinfo(bReader);
 			break;
 		case MODCHUNKS::MOD_COLLISION_GRID:
-			read(bReader, m_collisionGrid);
+			m_collisionGrid << bReader;
 			break;
 		case MODCHUNKS::MOD_EOF: // caught because it's not a valid chunk to read, so don't even bother warning user and just break
 			break;

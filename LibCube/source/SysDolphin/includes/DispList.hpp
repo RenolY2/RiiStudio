@@ -27,9 +27,10 @@ struct DispList
 			dispData = bReader.read<u8>();
 	}
 };
-inline void read(oishii::BinaryReader& reader, DispList& clr)
+
+inline void operator<<(DispList& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<DispList, oishii::Direct, false>(clr);
+	bReader.dispatch<DispList, oishii::Direct, false>(context);
 }
 
 

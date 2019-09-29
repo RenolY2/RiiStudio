@@ -17,9 +17,10 @@ struct BaseRoomInfo
 		context.m_unk1 = bReader.read<u32>();
 	}
 };
-inline void read(oishii::BinaryReader& reader, BaseRoomInfo& clr)
+
+inline void operator<<(BaseRoomInfo& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<BaseRoomInfo, oishii::Direct, false>(clr);
+	bReader.dispatch<BaseRoomInfo, oishii::Direct, false>(context);
 }
 
 }

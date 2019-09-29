@@ -40,9 +40,10 @@ struct TXE
 	void importTXE(oishii::BinaryReader&);
 	void importMODTXE(oishii::BinaryReader&);
 };
-inline void read(oishii::BinaryReader& reader, TXE& clr)
+
+inline void operator<<(TXE& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<TXE, oishii::Direct, false>(clr);
+	bReader.dispatch<TXE, oishii::Direct, false>(context);
 }
 
 }

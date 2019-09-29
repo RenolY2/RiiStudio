@@ -30,7 +30,7 @@ static bool openMODFile()
 	if (!fStream.is_open())
 		return false;
 
-	std::streamsize size = fStream.tellg();
+	u32 size = static_cast<u32>(fStream.tellg());
 	fStream.seekg(0, std::ios::beg);
 
 	auto data = std::unique_ptr<char>(new char[size]);
@@ -60,7 +60,7 @@ static bool openBTIFile()
 	if (!fStream.is_open())
 		return false;
 
-	std::streamsize size = fStream.tellg();
+	u32 size = static_cast<u32>(fStream.tellg());
 	fStream.seekg(0, std::ios::beg);
 
 	auto data = std::unique_ptr<char>(new char[size]);
@@ -90,7 +90,7 @@ static bool openTXEFile()
 	if (!fStream.is_open())
 		return false;
 
-	std::streamsize size = fStream.tellg();
+	u32 size = static_cast<u32>(fStream.tellg());
 	fStream.seekg(0, std::ios::beg);
 
 	auto data = std::unique_ptr<char>(new char[size]);
@@ -120,7 +120,7 @@ static bool openDCAFile()
 	if (!fStream.is_open())
 		return false;
 
-	std::streamsize size = fStream.tellg();
+	u32 size = static_cast<u32>(fStream.tellg());
 	fStream.seekg(0, std::ios::beg);
 
 	auto data = std::unique_ptr<char>(new char[size]);

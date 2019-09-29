@@ -19,9 +19,9 @@ struct Plane
 		context.m_unk2 = bReader.read<f32>();
 	}
 };
-inline void read(oishii::BinaryReader& reader, Plane& clr)
+inline void operator<<(Plane& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<Plane, oishii::Direct, false>(clr);
+	bReader.dispatch<Plane, oishii::Direct, false>(context);
 }
 
 }

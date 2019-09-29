@@ -21,7 +21,7 @@ struct VtxMatrix
 	}
 };
 
-inline void read(oishii::BinaryReader& reader, VtxMatrix& context)
+inline void operator<<(VtxMatrix& context, oishii::BinaryReader& reader)
 {
 	reader.dispatch<VtxMatrix, oishii::Direct, false>(context);
 }

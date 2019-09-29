@@ -41,10 +41,10 @@ struct PVWTevInfo
 	static void onRead(oishii::BinaryReader& bReader, PVWTevInfo& context)
 	{
 		// read 3 PVWTevColReg's
-		read(bReader, context.m_CPREV);
-		read(bReader, context.m_CREG0);
-		read(bReader, context.m_CREG1);
-		read(bReader, context.m_CREG2);
+		context.m_CPREV << bReader;
+		context.m_CREG0 << bReader;
+		context.m_CREG1 << bReader;
+		context.m_CREG2 << bReader;
 
 		context.m_tevStageCount = bReader.read<u32>();
 	}

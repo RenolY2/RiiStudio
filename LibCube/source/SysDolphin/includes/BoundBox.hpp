@@ -20,9 +20,10 @@ struct BoundBox
 		read(bReader, context.m_maxBounds);
 	}
 };
-inline void read(oishii::BinaryReader& reader, BoundBox& clr)
+
+inline void operator<<(BoundBox& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<BoundBox, oishii::Direct, false>(clr);
+	bReader.dispatch<BoundBox, oishii::Direct, false>(context);
 }
 
 }

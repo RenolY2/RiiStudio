@@ -51,9 +51,9 @@ struct Joint
 	}
 };
 
-inline void read(oishii::BinaryReader& reader, Joint& evp)
+inline void operator<<(Joint& context, oishii::BinaryReader& bReader)
 {
-	reader.dispatch<Joint, oishii::Direct, false>(evp);
+	bReader.dispatch<Joint, oishii::Direct, false>(context);
 }
 
 } }
