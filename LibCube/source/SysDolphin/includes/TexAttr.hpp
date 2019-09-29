@@ -30,7 +30,7 @@ struct TexAttr
 		context.m_index = bReader.read<u16>();
 		context.m_tilingMode = bReader.read<u16>();
 		context.m_mode = static_cast<Mode>(bReader.read<u16>());
-		bReader.read<u16>();
+		context.m_unk1 = bReader.read<u16>();
 		context.m_unk2 = bReader.read<f32>();
 	}
 };

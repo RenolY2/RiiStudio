@@ -8,22 +8,24 @@ namespace libcube { namespace pikmin1 {
 
 struct DataChunk
 {
+	constexpr static const char name[] = "DataChunk";
+
 	std::vector<float> m_data;
 
 	DataChunk() = default;
 	~DataChunk() = default;
 
-	void onRead(oishii::BinaryReader& bReader, DataChunk& context)
+	static void onRead(oishii::BinaryReader& bReader, DataChunk& context)
 	{
-		m_data.resize(bReader.read<u32>());
-		for (auto& data : m_data)
+		context.m_data.resize(bReader.read<u32>());
+		for (auto& data : context.m_data)
 			data = bReader.read<f32>();
 	}
 
-	void write(oishii::Writer & bWriter)
+	static void write(oishii::Writer& bWriter, DataChunk& context)
 	{
-		bWriter.write<u32>(m_data.size());
-		for (auto& data : m_data)
+		bWriter.write<u32>(context.m_data.size());
+		for (auto& data : context.m_data)
 			bWriter.write<f32>(data);
 	}
 };
