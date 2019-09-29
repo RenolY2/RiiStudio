@@ -5,12 +5,11 @@
 
 namespace libcube { namespace pikmin1 {
 
-
 struct VtxDescriptor
 {
 	u32 m_originalVCD;
 
-	void read(oishii::BinaryReader& bReader, u32 vcd)
+	void toPikmin1(u32 vcd)
 	{
 		m_originalVCD = vcd;
 	}
@@ -30,7 +29,7 @@ struct Batch
 	{
 		// Read the batch variables
 		context.m_unk1 = bReader.read<u32>();
-		context.m_vcd.read(bReader, bReader.read<u32>());
+		context.m_vcd.toPikmin1(bReader.read<u32>());
 
 		context.m_mtxGroups.resize(bReader.read<u32>());
 		context.m_depMTXGroups = 0;
