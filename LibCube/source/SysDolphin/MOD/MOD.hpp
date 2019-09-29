@@ -105,7 +105,6 @@ struct MOD
 	void read_header(oishii::BinaryReader&);
 
 	void read_basecolltriinfo(oishii::BinaryReader&); // opcode 0x100
-	void read_collisiongrid(oishii::BinaryReader&); // opcode 0x110
 
 	MOD() = default;
 	~MOD() = default;

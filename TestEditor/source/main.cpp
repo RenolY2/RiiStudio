@@ -211,7 +211,7 @@ private:
 	ThemeManager mThemeManager;
 };
 
-void main()
+int main(int argc, char* const* argv)
 {
 	auto plugin_factory = std::make_unique<PluginFactory>();
 
@@ -226,5 +226,7 @@ void main()
 		editor->attachWindow(plugin_factory->create(".bti", 0x00000002));
 
 		editor->frameLoop();
+
 	}
+	return EXIT_SUCCESS;
 }

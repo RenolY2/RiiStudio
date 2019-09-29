@@ -5,9 +5,13 @@
 
 namespace libcube { namespace pikmin1 {
 
+//TODO: VtxDescriptor
 struct VtxDescriptor
 {
 	u32 m_originalVCD;
+
+	VtxDescriptor() = default;
+	~VtxDescriptor() = default;
 
 	void toPikmin1(u32 vcd)
 	{
@@ -25,6 +29,9 @@ struct Batch
 
 	std::vector<MtxGroup> m_mtxGroups;
 
+	Batch() = default;
+	~Batch() = default;
+
 	static void onRead(oishii::BinaryReader& bReader, Batch& context)
 	{
 		// Read the batch variables
@@ -35,13 +42,12 @@ struct Batch
 		context.m_depMTXGroups = 0;
 		for (auto& mGroup : context.m_mtxGroups)
 		{
-			bReader.dispatch<MtxGroup, oishii::Direct, false>(mGroup);
+			read(bReader, mGroup);
 			if (mGroup.m_dependant.size() > context.m_depMTXGroups)
 				context.m_depMTXGroups = static_cast<u32>(mGroup.m_dependant.size());
 		}
 	}
 };
-
 inline void read(oishii::BinaryReader& reader, Batch& evp)
 {
 	reader.dispatch<Batch, oishii::Direct, false>(evp);

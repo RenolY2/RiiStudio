@@ -16,9 +16,14 @@ struct CollGroup
 	u32 m_unkCount2;
 	u32 m_blockSize;
 
+	CollGroup() = default;
+	~CollGroup() = default;
+
 	static void onRead(oishii::BinaryReader& bReader, CollGroup& context)
 	{
-		bReader.dispatch<BoundBox, oishii::Direct, false>(context.m_collBounds);
+		skipPadding(bReader);
+
+		read(bReader, context.m_collBounds);
 		context.m_unk1 = bReader.read<f32>();
 		context.m_unkCount1 = bReader.read<u32>();
 		context.m_unkCount2 = bReader.read<u32>();
@@ -50,8 +55,14 @@ struct CollGroup
 				const u32 unk1 = bReader.read<u32>();
 			}
 		}
+
+		skipPadding(bReader);
 	}
 };
+inline void read(oishii::BinaryReader& reader, CollGroup& clr)
+{
+	reader.dispatch<CollGroup, oishii::Direct, false>(clr);
+}
 
 }
 

@@ -24,6 +24,8 @@ struct Joint
 	};
 	std::vector<MatPoly> m_matpolys;
 
+	Joint() = default;
+	~Joint() = default;
 
 	static void onRead(oishii::BinaryReader& bReader, Joint& context)
 	{
