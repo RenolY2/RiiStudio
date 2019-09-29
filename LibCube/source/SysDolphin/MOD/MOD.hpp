@@ -99,6 +99,7 @@ struct MOD
 	std::vector<BaseCollTriInfo> m_baseCollTriInfo;
 	std::vector<BaseRoomInfo> m_baseRoomInfo;
 	CollGroup m_collisionGrid;
+	u32 m_numJoints = 0;
 
 	// Reading
 	void read_header(oishii::BinaryReader&);
