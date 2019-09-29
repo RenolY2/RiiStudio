@@ -111,6 +111,7 @@ struct MOD
 	~MOD() = default;
 
 	void parse(oishii::BinaryReader&);
+	void removeMtxDependancy();
 };
 
 }
