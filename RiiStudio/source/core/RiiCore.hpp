@@ -2,19 +2,14 @@
 
 #include <core/Applet.hpp>
 #include <ui/widgets/Dockspace.hpp>
-#include <ui/ThemeManager.hpp>
-
+#include "CoreContext.hpp"
+#include "Theme.hpp"
 
 class RiiCore : public Applet
 {
 public:
 
-	// With a simple applet, the core resource would be the current file itself.
-	// However, with the actual editor, the core resource needs to reflect the state of the editor itself and its plugin windows.
-	// TODO
-	struct EditorCoreRes : public CoreResource
-	{
-	};
+// TODO
 
 
 	WindowContext makeWindowContext() override
@@ -26,9 +21,6 @@ public:
 
 private:
 	DockSpace mDockSpace;
-	EditorCoreRes mCoreRes;
-
-	// TODO: Dedicated theme manager
-	ThemeManager::BasicTheme mThemeSelection = ThemeManager::BasicTheme::ImDark;
-	ThemeManager mThemeManager;
+	Theme mTheme;
+	EditorCoreRes mCoreRes = EditorCoreRes(mTheme);
 };
