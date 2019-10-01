@@ -39,7 +39,7 @@ void MOD::read_basecolltriinfo(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
-void MOD::parse(oishii::BinaryReader& bReader)
+void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 {	
 	bReader.setEndian(true); // big endian
 
@@ -59,19 +59,19 @@ void MOD::parse(oishii::BinaryReader& bReader)
 		switch (static_cast<MODCHUNKS>(cDescriptor))
 		{
 		case MODCHUNKS::MOD_HEADER:
-			read_header(bReader);
+			context.read_header(bReader);
 			break;
 		case MODCHUNKS::MOD_VERTEX:
-			readChunk(bReader, m_vertices);
+			readChunk(bReader, context.m_vertices);
 			break;
 		case MODCHUNKS::MOD_VERTEXNORMAL:
-			readChunk(bReader, m_vnorms);
+			readChunk(bReader, context.m_vnorms);
 			break;
 		case MODCHUNKS::MOD_NBT:
-			readChunk(bReader, m_nbt);
+			readChunk(bReader, context.m_nbt);
 			break;
 		case MODCHUNKS::MOD_VERTEXCOLOUR:
-			readChunk(bReader, m_colours);
+			readChunk(bReader, context.m_colours);
 			break;
 		case MODCHUNKS::MOD_TEXCOORD0:
 		case MODCHUNKS::MOD_TEXCOORD1:
@@ -81,34 +81,34 @@ void MOD::parse(oishii::BinaryReader& bReader)
 		case MODCHUNKS::MOD_TEXCOORD5:
 		case MODCHUNKS::MOD_TEXCOORD6:
 		case MODCHUNKS::MOD_TEXCOORD7:
-			readChunk(bReader, m_texcoords[cDescriptor - (int)MODCHUNKS::MOD_TEXCOORD0]);
+			readChunk(bReader, context.m_texcoords[cDescriptor - (int)MODCHUNKS::MOD_TEXCOORD0]);
 			break;
 		case MODCHUNKS::MOD_TEXTURE:
-			readChunk(bReader, m_textures);
+			readChunk(bReader, context.m_textures);
 			break;
 		case MODCHUNKS::MOD_TEXTURE_ATTRIBUTE:
-			readChunk(bReader, m_texattrs);
+			readChunk(bReader, context.m_texattrs);
 			break;
 		case MODCHUNKS::MOD_VTXMATRIX:
-			readChunk(bReader, m_vtxmatrices);
+			readChunk(bReader, context.m_vtxmatrices);
 			break;
 		case MODCHUNKS::MOD_ENVELOPE:
-			readChunk(bReader, m_envelopes);
+			readChunk(bReader, context.m_envelopes);
 			break;
 		case MODCHUNKS::MOD_MESH:
-			readChunk(bReader, m_batches);
+			readChunk(bReader, context.m_batches);
 			break;
 		case MODCHUNKS::MOD_JOINT:
-			readChunk(bReader, m_joints);
+			readChunk(bReader, context.m_joints);
 			break;
 		case MODCHUNKS::MOD_JOINT_NAME:
-			readChunk(bReader, m_jointNames);
+			readChunk(bReader, context.m_jointNames);
 			break;
 		case MODCHUNKS::MOD_COLLISION_TRIANGLE:
-			read_basecolltriinfo(bReader);
+			context.read_basecolltriinfo(bReader);
 			break;
 		case MODCHUNKS::MOD_COLLISION_GRID:
-			m_collisionGrid << bReader;
+			context.m_collisionGrid << bReader;
 			break;
 		case MODCHUNKS::MOD_EOF: // caught because it's not a valid chunk to read, so don't even bother warning user and just break
 			break;
@@ -125,7 +125,7 @@ void MOD::parse(oishii::BinaryReader& bReader)
 	}
 
 	DebugReport("Done reading file\n");
-	removeMtxDependancy();
+	context.removeMtxDependancy();
 }
 
 void MOD::removeMtxDependancy()

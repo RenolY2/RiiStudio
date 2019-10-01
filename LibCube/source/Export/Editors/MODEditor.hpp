@@ -29,7 +29,7 @@ struct MODEditor : public pl::FileEditor, public pl::Readable, public pl::Transf
 	// public pl::Readable
 	bool tryRead(oishii::BinaryReader& reader) override
 	{
-		coreRes.parse(reader);
+		coreRes << reader;
 		return true;
 	}
 

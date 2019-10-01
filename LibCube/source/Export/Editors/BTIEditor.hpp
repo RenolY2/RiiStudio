@@ -33,7 +33,7 @@ struct BTIEditor : public pl::FileEditor, public pl::Readable, public pl::ITextu
 	// public pl::Readable
 	bool tryRead(oishii::BinaryReader& reader) override
 	{
-		reader.dispatch<pikmin1::BTI>(coreRes);
+		reader.dispatch<j3d::BTI>(coreRes);
 		return true;
 	}
 	// public pl::ITextureList
@@ -60,7 +60,7 @@ struct BTIEditor : public pl::FileEditor, public pl::Readable, public pl::ITextu
 	}
 
 private:
-	pikmin1::BTI coreRes;
+	j3d::BTI coreRes;
 };
 
 namespace

@@ -81,6 +81,7 @@ struct MOD
 		static constexpr char materials[] = "Materials";
 		static constexpr char envelope[] = "Skinning Envelope";
 	};
+	static constexpr char name[] = "Pikmin 1 MOD file";
 
 	Holder<glm::vec3, Names::vertices> m_vertices; // vertices
 	Holder<glm::vec3, Names::normals> m_vnorms; // vertex normals
@@ -109,9 +110,13 @@ struct MOD
 	MOD() = default;
 	~MOD() = default;
 
-	void parse(oishii::BinaryReader&);
+	static void onRead(oishii::BinaryReader&, MOD&);
 	void removeMtxDependancy();
 };
+inline void operator<<(MOD& context, oishii::BinaryReader& bReader)
+{
+	bReader.dispatch<MOD, oishii::Direct, false>(context);
+}
 
 }
 

@@ -3,7 +3,7 @@
 #include <oishii/reader/binary_reader.hxx>
 #include <vector>
 
-namespace libcube { namespace pikmin1 {
+namespace libcube { namespace j3d {
 
 enum class BTIFormats : u8
 {

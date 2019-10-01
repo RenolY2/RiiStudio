@@ -1,6 +1,6 @@
 #include "BTI.hpp"
 
-namespace libcube { namespace pikmin1 {
+namespace libcube { namespace j3d {
 
 void BTI::onRead(oishii::BinaryReader& bReader, BTI& context)
 {
