@@ -59,9 +59,8 @@ void RiiCore::openFile(OpenFilePolicy policy)
 	const auto size = stream.tellg();
 	stream.seekg(0, std::ios::beg);
 
-	// TODO
-	auto data = std::unique_ptr<char>(new char[size]);
-	if (stream.read(data.get(), size))
+	std::vector<u8> data(size);
+	if (stream.read(reinterpret_cast<char*>(data.data()), size))
 	{
 		auto reader = std::make_unique<oishii::BinaryReader>(std::move(data), size, file.c_str());
 
