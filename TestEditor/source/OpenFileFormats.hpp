@@ -17,7 +17,7 @@ namespace libcube {
 namespace pk1 = libcube::pikmin1;
 
 template <class T>
-inline T* openParseFileFormat(const std::string& filterContent, const std::string& extension) {
+inline std::unique_ptr<T> openParseFileFormat(const std::string& filterContent, const std::string& extension) {
 	auto selection = pfd::open_file("Select a file", ".", { filterContent, extension }, false).result();
 	if (selection.empty()) // user has pressed cancel
 		return nullptr;
@@ -39,9 +39,9 @@ inline T* openParseFileFormat(const std::string& filterContent, const std::strin
 		oishii::BinaryReader reader(std::move(data), size, fileName.c_str());
 		reader.seekSet(0);
 
-		T instantiated;
-		reader.dispatch<T, oishii::Direct, false>(instantiated);
-		return &instantiated;
+		std::unique_ptr<T> instantiated = std::make_unique<T>();
+		reader.dispatch<T, oishii::Direct, false>(*instantiated.get());
+		return instantiated;
 	}
 
 	fStream.close();
