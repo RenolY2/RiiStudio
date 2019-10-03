@@ -22,7 +22,7 @@ struct RichName
 
 
 struct Package;
-struct FileEditor;
+struct FileState;
 struct Interface;
 
 
@@ -30,7 +30,7 @@ struct Package
 {
 	RichName mPackageName; // Command name unused
 
-	std::vector<const FileEditor*> mEditors; // static pointer
+	std::vector<const FileState*> mEditors; // static pointer
 };
 enum class InterfaceID
 {
@@ -38,9 +38,6 @@ enum class InterfaceID
 
 	//! Acts as CLI (and GUI) generator.
 	TransformStack,
-
-	//! Files that can be opened (endpoints)
-	Readable,
 
 	TextureList
 };
@@ -56,33 +53,30 @@ struct AbstractInterface
 };
 
 
-
-struct FileEditor
+//! A concrete state in memory that can blueprint an editor.
+//! IO must be handled by a separate endpoint
+//! Undecided on supporting merging with io.
+//!
+struct FileState
 {
-	virtual ~FileEditor() = default;
-	FileEditor() = default;
-	//	FileEditor(const FileEditor& other)
-	//	{
-	//		mExtensions = other.mExtensions;
-	//		mMagics = other.mMagics;
-	//		mInterfaces.reserve(other.mInterfaces.size());
-	//		for (const auto it : other.mInterfaces)
-	//			mInterfaces.push_back(it);
-	//	}
-	std::vector<std::string> mExtensions;
-	std::vector<u32> mMagics;
+	virtual ~FileState() = default;
+	FileState() = default;
+
 	// TODO: These must be part of the child class itself!
 	std::vector<AbstractInterface*> mInterfaces;
-
-	// virtual std::unique_ptr<FileEditor> cloneFileEditor() = 0;
 };
 
-struct Readable : public AbstractInterface
+//! No longer an interface, but a separate node in the data mesh.
+//!
+struct Readable
 {
-	Readable() : AbstractInterface(InterfaceID::Readable) {}
-	~Readable() override = default;
+	Readable() = default;
+	virtual ~Readable() = default;
 
-	virtual bool tryRead(oishii::BinaryReader& reader) = 0;
+	std::vector<std::string> mExtensions;
+	std::vector<u32> mMagics;
+
+	virtual bool tryRead(oishii::BinaryReader& reader, FileState& state) = 0;
 };
 
 // Transform stack
