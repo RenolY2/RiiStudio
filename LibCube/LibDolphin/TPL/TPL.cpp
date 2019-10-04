@@ -1,7 +1,7 @@
 #include "TPL.hpp"
 
-#include "TextureDecoding.hpp"
-#include "ogc/texture.h"
+#include <ThirdParty/TextureDecoding.hpp>
+#include <ThirdParty/ogc/texture.h>
 
 namespace libcube {
 

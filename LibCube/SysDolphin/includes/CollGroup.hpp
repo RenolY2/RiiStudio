@@ -2,6 +2,7 @@
 
 #include "essential_functions.hpp"
 #include "BoundBox.hpp"
+#include <LibRiiEditor/common.hpp>
 
 namespace libcube { namespace pikmin1 {
 

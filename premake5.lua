@@ -168,6 +168,7 @@ project "LibCube"
 	{
 		"LibCube",
 		"oishii",
+		"./",
 		(FBX_SDK_ROOT .. "../../../include")
 	}
 

@@ -1,4 +1,5 @@
 #include "TXE.hpp"
+#include <LibRiiEditor/common.hpp>
 
 namespace libcube { namespace pikmin1 {
 

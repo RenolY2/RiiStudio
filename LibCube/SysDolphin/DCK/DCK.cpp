@@ -1,7 +1,8 @@
 #include "DCK.hpp"
 
-namespace libcube {
-namespace pikmin1 {
+#include <LibRiiEditor/common.hpp>
+
+namespace libcube { namespace pikmin1 {
 
 void DCK::onRead(oishii::BinaryReader& bReader, DCK& context)
 {
@@ -41,6 +42,4 @@ void DCK::onRead(oishii::BinaryReader& bReader, DCK& context)
 	}
 }
 
-}
-
-}
+} }

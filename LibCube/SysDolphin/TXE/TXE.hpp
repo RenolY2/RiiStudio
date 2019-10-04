@@ -2,7 +2,7 @@
 
 #include <oishii/reader/binary_reader.hxx>
 #include <SysDolphin/includes/essential_functions.hpp>
-#include <TextureDecoding.hpp>
+#include <ThirdParty/TextureDecoding.hpp>
 
 #include <vector>
 

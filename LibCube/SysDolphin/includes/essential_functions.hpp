@@ -2,8 +2,7 @@
 
 #include <oishii/reader/binary_reader.hxx>
 #include <vector>
-#include <glm/glm.hpp>
-#include <common.hpp>
+#include <ThirdParty/glm/glm.hpp>
 
 namespace libcube {
 
