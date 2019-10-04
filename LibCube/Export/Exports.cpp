@@ -3,10 +3,8 @@
 #include "Exports.hpp"
 #include <string>
 
-#include "Editors/TPLEditor.hpp"
-#include "Editors/MODEditor.hpp"
-#include "Editors/TXEEditor.hpp"
-#include "Editors/BTIEditor.hpp"
+#include <LibRiiEditor/pluginapi/Package.hpp>
+
 
 namespace libcube {
 
@@ -20,10 +18,7 @@ pl::Package PluginPackage
 	},
 	// Editors
 	{
-		getTPLEditorHandle(),
-		getMODEditorHandle(),
-		getTXEEditorHandle(),
-		getBTIEditorHandle()
+		
 	}
 };
 
