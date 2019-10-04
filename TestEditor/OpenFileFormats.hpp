@@ -1,15 +1,15 @@
 #pragma once
 // Included for pfd:: usage
-#include <FileDialogues.hpp>
+#include <ThirdParty/FileDialogues.hpp>
 
 // Pikmin 1 formats
-#include "SysDolphin/MOD/MOD.hpp" // Model format
-#include "SysDolphin/DCA/DCA.hpp" // Animation format
-#include "SysDolphin/DCK/DCK.hpp" // Animation format
-#include "SysDolphin/TXE/TXE.hpp" // P1 Texture format
+#include <LibCube/SysDolphin/MOD/MOD.hpp> // Model format
+#include <LibCube/SysDolphin/DCA/DCA.hpp> // Animation format
+#include <LibCube/SysDolphin/DCK/DCK.hpp> // Animation format
+#include <LibCube/SysDolphin/TXE/TXE.hpp> // P1 Texture format
 
 // J3D formats
-#include "JSystem/J3D/BTI/BTI.hpp" // J3D Texture format
+#include <LibCube/JSystem/J3D/BTI/BTI.hpp> // J3D Texture format
 
 #include <fstream>
 

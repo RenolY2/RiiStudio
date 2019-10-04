@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pluginapi/Plugin.hpp"
+#include "LibRiiEditor/pluginapi/Plugin.hpp"
 #include "Plugin.hpp"
 #include <map>
 #include <mutex>

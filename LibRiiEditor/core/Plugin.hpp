@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pluginapi/Plugin.hpp"
-#include "ui/widgets/Outliner.hpp"
+#include "LibRiiEditor/pluginapi/Plugin.hpp"
+#include "LibRiiEditor/ui/widgets/Outliner.hpp"
 #include "WindowManager.hpp"
 
 struct EditorWindow : public WindowManager, public Window

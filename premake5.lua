@@ -80,12 +80,14 @@ function setupMainApp()
 	{
 		"./",
 		"oishii",
+		"ThirdParty",
 		(FBX_SDK_ROOT .. "../../../include")
 	}
 
 	links
 	{
 		"LibRiiEditor",
+		"LibCube",
 		"ThirdParty",
 		"ThirdParty/glfw/lib-vc2017/glfw3dll.lib",
 		"opengl32.lib",
@@ -153,7 +155,8 @@ project "ThirdParty"
 
 	includedirs
 	{
-		"oishii"
+		"oishii",
+		"ThirdParty"
 	}
 	setupStaticLib()
 	setupCppC()

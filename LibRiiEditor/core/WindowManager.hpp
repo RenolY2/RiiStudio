@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <variant>
-#include "ui/Window.hpp"
+#include <LibRiiEditor/ui/Window.hpp>
 #include "SelectionManager.hpp"
 
 struct WindowManagerInternal;

@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 #include <imgui/imgui.h>
-#include "core/SelectionManager.hpp"
+#include "LibRiiEditor/core/SelectionManager.hpp"
 
 #ifdef min
 #undef min

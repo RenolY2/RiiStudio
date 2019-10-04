@@ -1,11 +1,13 @@
 #include "OpenFileFormats.hpp"
 
-#include <core/Applet.hpp>
-#include <ui/widgets/Dockspace.hpp>
-#include <ui/ThemeManager.hpp>
+#include <LibRiiEditor/core/Applet.hpp>
+#include <LibRiiEditor/ui/widgets/Dockspace.hpp>
+#include <LibRiiEditor/ui/ThemeManager.hpp>
+#include <LibRiiEditor/ui/Window.hpp>
 
-#include <core/Plugin.hpp>
-#include <core/PluginFactory.hpp>
+
+#include <LibRiiEditor/core/Plugin.hpp>
+#include <LibRiiEditor/core/PluginFactory.hpp>
 
 #include <LibCube/Export/Exports.hpp>
 
@@ -90,12 +92,12 @@ int main(int argc, char* const* argv)
 	{
 		auto editor = std::make_unique<TestEditor>();
 
-		plugin_factory->registerPlugin(libcube::PluginPackage);
+		//	plugin_factory->registerPlugin(libcube::PluginPackage);
 
-		editor->attachWindow(plugin_factory->create(".mod", 0x00000000));
-		editor->attachWindow(plugin_factory->create(".tpl", 0x0020AF30));
-		editor->attachWindow(plugin_factory->create(".txe", 0x00000001));
-		editor->attachWindow(plugin_factory->create(".bti", 0x00000002));
+		//	editor->attachWindow(plugin_factory->create(".mod", 0x00000000));
+		//	editor->attachWindow(plugin_factory->create(".tpl", 0x0020AF30));
+		//	editor->attachWindow(plugin_factory->create(".txe", 0x00000001));
+		//	editor->attachWindow(plugin_factory->create(".bti", 0x00000002));
 
 		editor->frameLoop();
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "pluginapi/Interface.hpp"
+#include "LibRiiEditor/pluginapi/Interface.hpp"
 #include <oishii/types.hxx>
 
 namespace pl {

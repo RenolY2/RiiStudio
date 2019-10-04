@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "pluginapi/RichName.hpp"
-#include "pluginapi/Interface.hpp"
+#include "LibRiiEditor/pluginapi/RichName.hpp"
+#include "LibRiiEditor/pluginapi/Interface.hpp"
 
 namespace pl {
 
