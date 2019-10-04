@@ -1,5 +1,6 @@
 #include "Plugin.hpp"
 #include <fa5/IconsFontAwesome5.h>
+#include "ui/Window.hpp"
 
 struct TextureOutlinerConfig
 {
@@ -49,7 +50,7 @@ struct TextureOutliner final : public Window
 };
 
 
-EditorWindow::EditorWindow(const pl::FileEditor& registration)
+EditorWindow::EditorWindow(const pl::FileState& registration)
 	: mEditor(registration)
 {
 
@@ -70,12 +71,6 @@ void EditorWindow::draw(WindowContext* ctx) noexcept
 
 	if (ImGui::Begin("EditorWindow", &bOpen))
 	{
-		ImGui::Text("Extensions");
-		for (const auto& str : mEditor.mExtensions)
-			ImGui::Text(str.c_str());
-		ImGui::Text("Magics");
-		for (const auto m : mEditor.mMagics)
-			ImGui::Text("%c%c%c%c", m & 0xff000000, (m & 0x00ff0000) >> 8, (m & 0x0000ff00) >> 16, (m & 0xff) >> 24);
 		ImGui::Text("Interfaces");
 		for (const auto& str : mEditor.mInterfaces)
 			ImGui::Text(std::to_string(static_cast<u32>(str->mInterfaceId)).c_str());

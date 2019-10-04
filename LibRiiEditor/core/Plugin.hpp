@@ -2,13 +2,14 @@
 
 #include "pluginapi/Plugin.hpp"
 #include "ui/widgets/Outliner.hpp"
+#include "WindowManager.hpp"
 
 struct EditorWindow : public WindowManager, public Window
 {
 	~EditorWindow() override = default;
-	EditorWindow(const pl::FileEditor& registration);
+	EditorWindow(const pl::FileState& registration);
 
 	void draw(WindowContext* ctx) noexcept override final;
 
-	const pl::FileEditor& mEditor;
+	const pl::FileState& mEditor;
 };
