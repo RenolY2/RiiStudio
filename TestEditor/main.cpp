@@ -7,7 +7,7 @@
 #include <core/Plugin.hpp>
 #include <core/PluginFactory.hpp>
 
-#include "Export/Exports.hpp"
+#include <LibCube/Export/Exports.hpp>
 
 static inline int toIntComp(float src)
 {
