@@ -123,7 +123,10 @@ end
 project "LibRiiEditor"
 	location "LibRiiEditor"
 	includedirs {
-		"oishii"
+		"oishii",
+		"./",
+		"ThirdParty",
+		"LibRiiEditor"
 	}
 
 	setupStaticLib()

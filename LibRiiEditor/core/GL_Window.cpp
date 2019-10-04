@@ -1,9 +1,9 @@
 #include "GL_Window.hpp"
 
 #include <cstdio>
-#include <GL/gl3w.h>
-#include <GLFW/glfw3.h>
-#include <imgui/imgui.h>
+#include <ThirdParty/GL/gl3w.h>
+#include <ThirdParty/GLFW/glfw3.h>
+#include <ThirdParty/imgui/imgui.h>
 #include <stdlib.h>
 
 // Loosely based on Dear ImGui impl demo code.
