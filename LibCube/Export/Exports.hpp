@@ -1,6 +1,8 @@
 #pragma once
 
-#include "pluginapi/Plugin.hpp"
+#include "Exports.hpp"
+
+#include <LibRiiEditor/pluginapi/Package.hpp>
 
 namespace libcube {
 
