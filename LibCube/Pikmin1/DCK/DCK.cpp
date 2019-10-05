@@ -23,21 +23,21 @@ void DCK::onRead(oishii::BinaryReader& bReader, DCK& context)
 		for (u32 i = 0; i < 3; i++)
 		{
 		// FIXME: Apply fixed point shift and fill in vector3
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.sx_param[i]));
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.sy_param[i]));
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.sz_param[i]));
+			joint.sx_param[i] << bReader;
+			joint.sy_param[i] << bReader;
+			joint.sz_param[i] << bReader;
 		}
 		for (u32 i = 0; i < 3; i++)
 		{
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.rx_param[i]));
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.ry_param[i]));
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.rz_param[i]));
+			joint.rx_param[i] << bReader;
+			joint.ry_param[i] << bReader;
+			joint.rz_param[i] << bReader;
 		}
 		for (u32 i = 0; i < 3; i++)
 		{
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.tx_param[i]));
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.ty_param[i]));
-			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.tz_param[i]));
+			joint.tx_param[i] << bReader;
+			joint.ty_param[i] << bReader;
+			joint.tz_param[i] << bReader;
 		}
 
 	}
