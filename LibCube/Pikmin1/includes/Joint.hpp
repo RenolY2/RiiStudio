@@ -1,6 +1,7 @@
 #pragma once
 
 #include "essential_functions.hpp"
+#include "BoundBox.hpp"
 
 namespace libcube { namespace pikmin1 {
 
@@ -11,8 +12,7 @@ struct Joint
 	u32 m_index;
 	bool m_useVolume;
 	bool m_foundLightGroup;
-	glm::vec3 m_boundsMin;
-	glm::vec3 m_boundsMax;
+	BoundBox m_boundingBox;
 	f32 m_volumeRadius;
 	glm::vec3 m_scale;
 	glm::vec3 m_rotation;
@@ -39,8 +39,7 @@ struct Joint
 		context.m_foundLightGroup = (usingIdentifier & 0x4000) != 0;
 
 		// These have been confirmed to be correct
-		read(bReader, context.m_boundsMin);
-		read(bReader, context.m_boundsMax);
+		context.m_boundingBox << bReader;
 		context.m_volumeRadius = bReader.read<f32>();
 		read(bReader, context.m_scale);
 		read(bReader, context.m_rotation);

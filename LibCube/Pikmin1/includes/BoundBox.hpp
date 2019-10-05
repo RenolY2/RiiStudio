@@ -19,6 +19,22 @@ struct BoundBox
 		read(bReader, context.m_minBounds);
 		read(bReader, context.m_maxBounds);
 	}
+
+	void expandBound(BoundBox& expandBy)
+	{
+		if (expandBy.m_minBounds.x < m_minBounds.x)
+			m_minBounds.x = expandBy.m_minBounds.x;
+		if (expandBy.m_minBounds.y < m_minBounds.y)
+			m_minBounds.y = expandBy.m_minBounds.y;
+		if (expandBy.m_minBounds.z < m_minBounds.z)
+			m_minBounds.z = expandBy.m_minBounds.z;
+		if (expandBy.m_maxBounds.x > m_maxBounds.x)
+			m_maxBounds.x = expandBy.m_maxBounds.x;
+		if (expandBy.m_maxBounds.y > m_maxBounds.y)
+			m_maxBounds.y = expandBy.m_maxBounds.y;
+		if (expandBy.m_maxBounds.z > m_maxBounds.z)
+			m_maxBounds.z = expandBy.m_maxBounds.z;
+	}
 };
 
 inline void operator<<(BoundBox& context, oishii::BinaryReader& bReader)

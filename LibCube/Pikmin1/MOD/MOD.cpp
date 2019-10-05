@@ -1,7 +1,8 @@
 #define OISHII_ALIGNMENT_CHECK 0
 #include "MOD.hpp"
 
-namespace libcube { namespace pikmin1 {
+namespace libcube {
+namespace pikmin1 {
 
 
 void MOD::read_header(oishii::BinaryReader& bReader)
@@ -55,7 +56,7 @@ void MOD::read_materials(oishii::BinaryReader& bReader)
 }
 
 void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
-{	
+{
 	bReader.setEndian(true); // big endian
 
 	u32 cDescriptor = 0;
@@ -67,7 +68,7 @@ void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 
 		if (cStart & 0x1f)
 		{
-			bReader.warnAt("bReader.tell() isn't aligned with 0x20! ERROR!\n", cStart - 4 , cStart);
+			bReader.warnAt("bReader.tell() isn't aligned with 0x20! ERROR!\n", cStart - 4, cStart);
 			return;
 		}
 
@@ -114,7 +115,17 @@ void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 			readChunk(bReader, context.m_batches);
 			break;
 		case Chunks::Joint:
-			readChunk(bReader, context.m_joints);
+			context.m_joints.resize(bReader.read<u32>());
+
+			skipPadding(bReader);
+
+			for (auto& joint : context.m_joints) {
+				joint << bReader;
+				// taken from decomp, if used there good enough to be used here
+				context.m_collisionGrid.m_collBounds.expandBound(joint.m_boundingBox);
+			}
+
+			skipPadding(bReader);
 			break;
 		case Chunks::JointName:
 			readChunk(bReader, context.m_jointNames);
@@ -155,4 +166,5 @@ void MOD::removeMtxDependancy()
 	}
 }
 
-} } // libcube::pikmin1
+}
+} // libcube::pikmin1
