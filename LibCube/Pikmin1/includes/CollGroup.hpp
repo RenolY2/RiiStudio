@@ -6,15 +6,29 @@
 
 namespace libcube { namespace pikmin1 {
 
+// Unsure of how to go abouts doing this
+struct CollGroupVariables
+{
+	CollGroupVariables() = default;
+	~CollGroupVariables() = default;
+
+	u16 m_unk1Count = 0;
+	std::vector<u8> m_vecUnk1;
+
+	std::vector<u32> m_vecUnk2;
+	u16 m_collTriCount = 0;
+};
+
 struct CollGroup
 {
 	constexpr static const char name[] = "Collision Group";
 
 	BoundBox m_collBounds;
+	CollGroupVariables m_vars;
 
-	float m_unk1;
-	u32 m_unkCount1;
-	u32 m_unkCount2;
+	f32 m_gridSizeRadius;
+	u32 m_gridSizeX;
+	u32 m_gridSizeY;
 	u32 m_blockSize;
 
 	CollGroup() = default;
@@ -25,33 +39,39 @@ struct CollGroup
 		skipPadding(bReader);
 
 		context.m_collBounds << bReader;
-		context.m_unk1 = bReader.read<f32>();
-		context.m_unkCount1 = bReader.read<u32>();
-		context.m_unkCount2 = bReader.read<u32>();
+
+		context.m_gridSizeRadius = bReader.read<f32>();
+		context.m_gridSizeX = bReader.read<u32>();
+		context.m_gridSizeY = bReader.read<u32>();
+		
 		context.m_blockSize = bReader.read<u32>();
 
 		u32 maxCollTris = 0;
 		for (u32 i = 0; i < context.m_blockSize; i++)
 		{
-			const u16 unkCount1 = bReader.read<u16>();
-			const u16 collTriCount = bReader.read<u16>();
+			context.m_vars.m_unk1Count = bReader.read<u16>();
+			context.m_vars.m_collTriCount = bReader.read<u16>();
 
-			if (collTriCount > maxCollTris)
-				maxCollTris = collTriCount;
+			if (context.m_vars.m_collTriCount > maxCollTris)
+				maxCollTris = context.m_vars.m_collTriCount;
 
-			for (u32 j = 0; j < collTriCount; j++)
-				bReader.read<u32>();
+			context.m_vars.m_vecUnk2.resize(context.m_vars.m_collTriCount);
+			for (auto& var : context.m_vars.m_vecUnk2)
+				var = bReader.read<u32>();
 
-			if (unkCount1)
-				for (u32 k = 0; k < unkCount1; k++)
-					bReader.read<u8>();
+			if (context.m_vars.m_unk1Count)
+			{
+				context.m_vars.m_vecUnk2.resize(context.m_vars.m_unk1Count);
+				for (auto& byte : context.m_vars.m_vecUnk2)
+					byte = bReader.read<u8>();
+			}
 		}
 
 		DebugReport("Max collision triangles within a block: %u\n", maxCollTris);
 
-		for (u32 i = 0; i < context.m_unkCount2; i++)
+		for (u32 i = 0; i < context.m_gridSizeY; i++)
 		{
-			for (u32 j = 0; j < context.m_unkCount1; j++)
+			for (u32 j = 0; j < context.m_gridSizeX; j++)
 			{
 				const u32 unk1 = bReader.read<u32>();
 			}

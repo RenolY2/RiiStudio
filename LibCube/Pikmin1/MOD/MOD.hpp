@@ -86,6 +86,7 @@ struct MOD
 		static constexpr char texcoords[] = "Texture Coordinates";
 		static constexpr char texattribs[] = "Texture Attributes";
 		static constexpr char materials[] = "Materials";
+		static constexpr char tevinfos[] = "Texture Environments";
 		static constexpr char envelope[] = "Skinning Envelope";
 	};
 	static constexpr char name[] = "Pikmin 1 MOD file";
@@ -101,7 +102,10 @@ struct MOD
 	Holder<TXE, Names::textures> m_textures; // textures
 	Holder<glm::vec2, Names::texcoords> m_texcoords[8]; // texture coordinates 0 - 7, x = s, y  = t
 	Holder<TexAttr, Names::texattribs> m_texattrs; // texture attributes
-	Holder<Material, Names::materials> m_materials; // texture environments
+
+	Holder<Material, Names::materials> m_materials;
+	Holder<PVWTevInfo, Names::tevinfos> m_tevinfos;
+
 	Holder<Envelope, Names::envelope> m_envelopes; // skinning envelopes
 
 	std::vector<BaseCollTriInfo> m_baseCollTriInfo;
@@ -113,6 +117,7 @@ struct MOD
 	void read_header(oishii::BinaryReader&);
 
 	void read_basecolltriinfo(oishii::BinaryReader&); // opcode 0x100
+	void read_materials(oishii::BinaryReader&); // opcode 0x30
 
 	MOD() = default;
 	~MOD() = default;

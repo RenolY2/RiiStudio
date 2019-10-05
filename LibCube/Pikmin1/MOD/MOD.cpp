@@ -48,6 +48,12 @@ void MOD::read_basecolltriinfo(oishii::BinaryReader& bReader)
 	skipPadding(bReader);
 }
 
+void MOD::read_materials(oishii::BinaryReader& bReader)
+{
+	DebugReport("Reading materials\n");
+
+}
+
 void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 {	
 	bReader.setEndian(true); // big endian
