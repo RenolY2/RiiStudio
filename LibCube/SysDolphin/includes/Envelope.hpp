@@ -8,7 +8,7 @@ struct Envelope
 {
 	constexpr static const char name[] = "Envelope";
 
-	std::vector<u16> m_indexes;
+	std::vector<u16> m_indices;
 	std::vector<f32> m_weights;
 
 	Envelope() = default;
@@ -16,12 +16,12 @@ struct Envelope
 
 	static void onRead(oishii::BinaryReader& bReader, Envelope& context)
 	{
-		context.m_indexes.resize(bReader.read<u16>());
-		context.m_weights.resize(context.m_indexes.size());
+		context.m_indices.resize(bReader.read<u16>());
+		context.m_weights.resize(context.m_indices.size());
 
-		for (u32 i = 0; i < context.m_indexes.size(); i++)
+		for (u32 i = 0; i < context.m_indices.size(); i++)
 		{
-			context.m_indexes[i] = bReader.read<u16>();
+			context.m_indices[i] = bReader.read<u16>();
 			context.m_weights[i] = bReader.read<f32>();
 		}
 	}
