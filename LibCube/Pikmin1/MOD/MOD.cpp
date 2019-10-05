@@ -67,59 +67,59 @@ void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 
 		switch (static_cast<MODCHUNKS>(cDescriptor))
 		{
-		case MODCHUNKS::MOD_HEADER:
+		case MODCHUNKS::Header:
 			context.read_header(bReader);
 			break;
-		case MODCHUNKS::MOD_VERTEX:
+		case MODCHUNKS::VertexPosition:
 			readChunk(bReader, context.m_vertices);
 			break;
-		case MODCHUNKS::MOD_VERTEXNORMAL:
+		case MODCHUNKS::VertexNormal:
 			readChunk(bReader, context.m_vnorms);
 			break;
-		case MODCHUNKS::MOD_NBT:
+		case MODCHUNKS::VertexNBT:
 			readChunk(bReader, context.m_nbt);
 			break;
-		case MODCHUNKS::MOD_VERTEXCOLOUR:
+		case MODCHUNKS::VertexColor:
 			readChunk(bReader, context.m_colours);
 			break;
-		case MODCHUNKS::MOD_TEXCOORD0:
-		case MODCHUNKS::MOD_TEXCOORD1:
-		case MODCHUNKS::MOD_TEXCOORD2:
-		case MODCHUNKS::MOD_TEXCOORD3:
-		case MODCHUNKS::MOD_TEXCOORD4:
-		case MODCHUNKS::MOD_TEXCOORD5:
-		case MODCHUNKS::MOD_TEXCOORD6:
-		case MODCHUNKS::MOD_TEXCOORD7:
-			readChunk(bReader, context.m_texcoords[cDescriptor - (int)MODCHUNKS::MOD_TEXCOORD0]);
+		case MODCHUNKS::VertexUV0:
+		case MODCHUNKS::VertexUV1:
+		case MODCHUNKS::VertexUV2:
+		case MODCHUNKS::VertexUV3:
+		case MODCHUNKS::VertexUV4:
+		case MODCHUNKS::VertexUV5:
+		case MODCHUNKS::VertexUV6:
+		case MODCHUNKS::VertexUV7:
+			readChunk(bReader, context.m_texcoords[cDescriptor - (int)MODCHUNKS::VertexUV0]);
 			break;
-		case MODCHUNKS::MOD_TEXTURE:
+		case MODCHUNKS::Texture:
 			readChunk(bReader, context.m_textures);
 			break;
-		case MODCHUNKS::MOD_TEXTURE_ATTRIBUTE:
+		case MODCHUNKS::TextureAttribute:
 			readChunk(bReader, context.m_texattrs);
 			break;
-		case MODCHUNKS::MOD_VTXMATRIX:
+		case MODCHUNKS::VertexMatrix:
 			readChunk(bReader, context.m_vtxmatrices);
 			break;
-		case MODCHUNKS::MOD_ENVELOPE:
+		case MODCHUNKS::Envelope:
 			readChunk(bReader, context.m_envelopes);
 			break;
-		case MODCHUNKS::MOD_MESH:
+		case MODCHUNKS::Mesh:
 			readChunk(bReader, context.m_batches);
 			break;
-		case MODCHUNKS::MOD_JOINT:
+		case MODCHUNKS::Joint:
 			readChunk(bReader, context.m_joints);
 			break;
-		case MODCHUNKS::MOD_JOINT_NAME:
+		case MODCHUNKS::JointName:
 			readChunk(bReader, context.m_jointNames);
 			break;
-		case MODCHUNKS::MOD_COLLISION_TRIANGLE:
+		case MODCHUNKS::CollisionPrism:
 			context.read_basecolltriinfo(bReader);
 			break;
-		case MODCHUNKS::MOD_COLLISION_GRID:
+		case MODCHUNKS::CollisionGrid:
 			context.m_collisionGrid << bReader;
 			break;
-		case MODCHUNKS::MOD_EOF: // caught because it's not a valid chunk to read, so don't even bother warning user and just break
+		case MODCHUNKS::EoF: // caught because it's not a valid chunk to read, so don't even bother warning user and just break
 			break;
 		default:
 			bReader.warnAt("Unimplemented chunk\n", cStart, cStart + 4);

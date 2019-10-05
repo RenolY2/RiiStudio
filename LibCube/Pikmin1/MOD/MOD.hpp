@@ -5,40 +5,47 @@
 
 namespace libcube { namespace pikmin1 {
 
-enum class MODCHUNKS : u16
-{
-	MOD_HEADER = 0x0000,
 
-	MOD_VERTEX = 0x0010,
-	MOD_VERTEXNORMAL = 0x0011,
-	MOD_NBT = 0x0012,
-	MOD_VERTEXCOLOUR = 0x0013,
-
-	MOD_TEXCOORD0 = 0x0018,
-	MOD_TEXCOORD1 = 0x0019,
-	MOD_TEXCOORD2 = 0x001A,
-	MOD_TEXCOORD3 = 0x001B,
-	MOD_TEXCOORD4 = 0x001C,
-	MOD_TEXCOORD5 = 0x001D,
-	MOD_TEXCOORD6 = 0x001E,
-	MOD_TEXCOORD7 = 0x001F,
-
-	MOD_TEXTURE = 0x0020,
-	MOD_TEXTURE_ATTRIBUTE = 0x0022,
-	MOD_MATERIAL = 0x0030,
-
-	MOD_VTXMATRIX = 0x0040,
-	MOD_ENVELOPE = 0x0041,
-	MOD_MESH = 0x0050,
-	MOD_JOINT = 0x0060,
-	MOD_JOINT_NAME = 0x0061,
-	MOD_COLLISION_TRIANGLE = 0x0100,
-	MOD_COLLISION_GRID = 0x0110,
-	MOD_EOF = 0xFFFF
-};
 
 struct MOD
 {
+	enum class Chunks : u16
+	{
+		Header = 0x0000,
+
+		VertexPosition = 0x0010,
+		VertexNormal = 0x0011,
+		VertexNBT = 0x0012,
+		VertexColor = 0x0013,
+
+		VertexUV0 = 0x0018,
+		VertexUV1 = 0x0019,
+		VertexUV2 = 0x001A,
+		VertexUV3 = 0x001B,
+		VertexUV4 = 0x001C,
+		VertexUV5 = 0x001D,
+		VertexUV6 = 0x001E,
+		VertexUV7 = 0x001F,
+
+		Texture = 0x0020,
+		TextureAttribute = 0x0022,
+		Material = 0x0030,
+
+		VertexMatrix = 0x0040,
+
+		Envelope = 0x0041,
+
+		Mesh = 0x0050,
+
+		Joint = 0x0060,
+		JointName = 0x0061,
+
+		CollisionPrism = 0x0100,
+		CollisionGrid = 0x0110,
+
+		EoF = 0xFFFF
+	};
+
 	struct
 	{
 		u16 m_year = 0;
