@@ -9,50 +9,53 @@ bool PluginFactory::registerPlugin(const pl::Package& package)
 		return false;
 	}
 
-	for (int i = 0; i < package.mEditors.size(); ++i)
-	{
-		//	if (package.mEditors[i]->mExtensions.empty() == 0 && package.mEditors[i]->mMagics.empty())
-		//	{
-		//		DebugReport("Warning: Plugin's domain is purely intensively determined.");
-		//		DebugReport("Intensive checking not yet supported, exiting...");
-		//		return false;
-		//	}
-
-		// TODO: More validation
-
-		//	{
-		//		std::lock_guard<std::mutex> guard(mMutex);
-		//	
-		//		const auto cur_idx = mPlugins.size();
-		//	
-		//		mPlugins.push_back(package.mEditors[i]);
-		//	
-		//		const auto& ed = *package.mEditors[i];
-		//	
-		//		for (int j = 0; j < ed.mExtensions.size(); ++j)
-		//			mExtensions.emplace_back(std::make_pair(std::string(ed.mExtensions[j]), cur_idx));
-		//	
-		//		for (int j = 0; j < ed.mMagics.size(); ++j)
-		//			mMagics.emplace(ed.mMagics[j], cur_idx);
-		//	}
-	}
+	
 	return true;
 }
 
-std::unique_ptr<EditorWindow> PluginFactory::create(const std::string& extension, u32 magic)
+template<typename T>
+struct ScopedInc
 {
-	// TODO: Check extension
-	
-	const auto it = mMagics.find(magic);
+	ScopedInc(T& v_)
+		: v(v_)
+	{}
+	ScopedInc()
+	{ --v; }
 
-	if (it != mMagics.end())
+	T& v;
+};
+
+std::unique_ptr<pl::FileState> PluginFactory::create(const std::string& fileName, oishii::BinaryReader& reader)
+{
+	using MatchResult = pl::FileStateSpawner::MatchResult;
+
+	std::map<std::size_t, MatchResult> matched;
+
+	// Unfortunate linear time search
+	std::size_t i;
+	for (const auto& plugin : mPlugins)
 	{
-		// TODO: Proceed to intensive check to verify match
-		return std::make_unique<EditorWindow>(*mPlugins[it->second]);
+		ScopedInc g(i);
+
+		const auto match = plugin->match(fileName, reader);
+
+		if (match != MatchResult::Mismatch)
+			matched[i] = match;
 	}
 
-	// TODO: Perform intensive checking on all resources, pick most likely candidate
-	throw "Unable to match plugin";
-	assert(0);
-	return nullptr;
+	if (matched.size() == 0)
+	{
+		DebugReport("No matches.\n");
+		return nullptr;
+	}
+	else if (matched.size() > 1)
+	{
+		// FIXME: Find best match or prompt user
+		DebugReport("Multiple matches.\n");
+		assert(0); exit(1);
+	}
+	else
+	{
+		return mPlugins[matched.begin()->first]->spawn();
+	}
 }

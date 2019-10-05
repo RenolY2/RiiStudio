@@ -19,13 +19,14 @@ public:
 	//!
 	bool registerPlugin(const pl::Package& package);
 
-	std::unique_ptr<EditorWindow> create(const std::string& extension, u32 magic);
+	std::unique_ptr<pl::FileState> create(const std::string& filename, oishii::BinaryReader& reader);
 
 private:
 	std::mutex mMutex;		//!< When performing write operations (registering a plugin)
 	//! Other data here references by index -- be careful to maintain that.
-	std::vector<const pl::FileState*> mPlugins; // static pointers
+	std::vector<const pl::FileStateSpawner*> mPlugins; // static pointers
 
-	std::vector<std::pair<std::string, std::size_t>> mExtensions; //!< Maps extension string to mPlugins index.
-	std::map<u32, std::size_t> mMagics;		//!< Maps file magic identifiers to mPlugins index.
+	// -- Deprecated --
+	//	std::vector<std::pair<std::string, std::size_t>> mExtensions; //!< Maps extension string to mPlugins index.
+	//	std::map<u32, std::size_t> mMagics;		//!< Maps file magic identifiers to mPlugins index.
 };
