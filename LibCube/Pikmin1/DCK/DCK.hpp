@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LibCube/Pikmin1/allincludes.hpp"
-#include <tuple>
+#include <ThirdParty/glm/vec3.hpp>
 
 namespace libcube { namespace pikmin1 {
 
@@ -10,9 +10,9 @@ struct DCKAnimJoint
 	u32 index = 0;
 	u32 parent = 0;
 
-	std::array<std::tuple<f32, f32, f32>, 3> sx_param, sy_param, sz_param;
-	std::array<std::tuple<f32, f32, f32>, 3> rx_param, ry_param, rz_param;
-	std::array<std::tuple<f32, f32, f32>, 3> tx_param, ty_param, tz_param;
+	std::array<glm::vec3, 3> sx_param, sy_param, sz_param;
+	std::array<glm::vec3, 3> rx_param, ry_param, rz_param;
+	std::array<glm::vec3, 3> tx_param, ty_param, tz_param;
 
 	DCKAnimJoint() = default;
 	~DCKAnimJoint() = default;

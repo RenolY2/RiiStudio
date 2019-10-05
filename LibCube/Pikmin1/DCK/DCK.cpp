@@ -22,6 +22,7 @@ void DCK::onRead(oishii::BinaryReader& bReader, DCK& context)
 
 		for (u32 i = 0; i < 3; i++)
 		{
+		// FIXME: Apply fixed point shift and fill in vector3
 			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.sx_param[i]));
 			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.sy_param[i]));
 			std::apply([&bReader](auto && ... args) { ((args = bReader.read<u32>()), ...); }, std::move(joint.sz_param[i]));
