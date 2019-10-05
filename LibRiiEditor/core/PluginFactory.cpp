@@ -1,5 +1,5 @@
 #include "PluginFactory.hpp"
-
+#include <LibRiiEditor/common.hpp>
 
 bool PluginFactory::registerPlugin(const pl::Package& package)
 {
@@ -12,18 +12,6 @@ bool PluginFactory::registerPlugin(const pl::Package& package)
 	
 	return true;
 }
-
-template<typename T>
-struct ScopedInc
-{
-	ScopedInc(T& v_)
-		: v(v_)
-	{}
-	ScopedInc()
-	{ --v; }
-
-	T& v;
-};
 
 std::unique_ptr<pl::FileState> PluginFactory::create(const std::string& fileName, oishii::BinaryReader& reader)
 {

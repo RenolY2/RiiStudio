@@ -19,3 +19,21 @@
 #else
 #define DebugReport(...)
 #endif
+
+#ifdef __cplusplus
+template<typename T, T inc = 1>
+struct ScopedInc
+{
+	inline ScopedInc(T& v_)
+		: v(v_)
+	{}
+	inline ScopedInc()
+	{ v += inc; }
+
+	T& v;
+};
+
+template<typename T, T inc = 1>
+using ScopedDec = ScopedInc<T, -inc>;
+
+#endif
