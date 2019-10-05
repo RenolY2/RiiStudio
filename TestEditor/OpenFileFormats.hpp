@@ -3,10 +3,10 @@
 #include <ThirdParty/FileDialogues.hpp>
 
 // Pikmin 1 formats
-#include <LibCube/SysDolphin/MOD/MOD.hpp> // Model format
-#include <LibCube/SysDolphin/DCA/DCA.hpp> // Animation format
-#include <LibCube/SysDolphin/DCK/DCK.hpp> // Animation format
-#include <LibCube/SysDolphin/TXE/TXE.hpp> // P1 Texture format
+#include <LibCube/Pikmin1/MOD/MOD.hpp> // Model format
+#include <LibCube/Pikmin1/DCA/DCA.hpp> // Animation format
+#include <LibCube/Pikmin1/DCK/DCK.hpp> // Animation format
+#include <LibCube/Pikmin1/TXE/TXE.hpp> // P1 Texture format
 
 // J3D formats
 #include <LibCube/JSystem/J3D/BTI/BTI.hpp> // J3D Texture format

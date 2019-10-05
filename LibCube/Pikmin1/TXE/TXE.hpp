@@ -1,7 +1,7 @@
 #pragma once
 
 #include <oishii/reader/binary_reader.hxx>
-#include <LibCube/SysDolphin/includes/essential_functions.hpp>
+#include <LibCube/Pikmin1/includes/essential_functions.hpp>
 #include <ThirdParty/TextureDecoding.hpp>
 
 #include <vector>

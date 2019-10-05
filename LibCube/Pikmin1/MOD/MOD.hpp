@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../allincludes.hpp"
-#include <LibCube/SysDolphin/TXE/TXE.hpp>
+#include <LibCube/Pikmin1/TXE/TXE.hpp>
 
 namespace libcube { namespace pikmin1 {
 

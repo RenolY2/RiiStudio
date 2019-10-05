@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LibCube/SysDolphin/allincludes.hpp"
+#include "LibCube/Pikmin1/allincludes.hpp"
 #include <tuple>
 
 namespace libcube { namespace pikmin1 {
