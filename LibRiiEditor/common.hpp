@@ -1,3 +1,5 @@
+#pragma once
+
 #include <oishii/types.hxx>
 #include <oishii/options.hxx>
 
@@ -21,7 +23,7 @@
 #endif
 
 #ifdef __cplusplus
-template<typename T, T inc = 1>
+template<typename T, int inc = 1>
 struct ScopedInc
 {
 	inline ScopedInc(T& v_)
@@ -33,7 +35,7 @@ struct ScopedInc
 	T& v;
 };
 
-template<typename T, T inc = 1>
+template<typename T, int inc = 1>
 using ScopedDec = ScopedInc<T, -inc>;
 
 #endif

@@ -13,18 +13,10 @@ struct FileState;
 //!
 struct FileStateSpawner
 {
-	// EFE inspired
-	enum class MatchResult
-	{
-		Magic,
-		Contents,
-		Mismatch
-	};
-
 	virtual ~FileStateSpawner() = default;
 
 	virtual std::unique_ptr<FileState> spawn() const = 0;
-	virtual MatchResult match(const std::string& fileName, oishii::BinaryReader& reader) const = 0;
+	virtual std::unique_ptr<FileStateSpawner> clone() const = 0;
 };
 
 } // namespace pl
