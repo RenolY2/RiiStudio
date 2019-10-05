@@ -1,7 +1,7 @@
 #pragma once
 
-#include <core/Applet.hpp>
-#include <ui/Window.hpp>
+#include <LibRiiEditor/core/Applet.hpp>
+#include <LibRiiEditor/ui/Window.hpp>
 
 
 struct Theme;

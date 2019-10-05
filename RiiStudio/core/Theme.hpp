@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ui/ThemeManager.hpp>
-#include <ui/Window.hpp>
+#include <LibRiiEditor/ui/ThemeManager.hpp>
+#include <LibRiiEditor/ui/Window.hpp>
 #include "CoreContext.hpp"
 
 class Theme

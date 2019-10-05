@@ -1,7 +1,7 @@
 #pragma once
 
-#include <core/Applet.hpp>
-#include <ui/widgets/Dockspace.hpp>
+#include <LibRiiEditor/core/Applet.hpp>
+#include <LibRiiEditor/ui/widgets/Dockspace.hpp>
 #include "CoreContext.hpp"
 #include "Theme.hpp"
 #include <vector>
