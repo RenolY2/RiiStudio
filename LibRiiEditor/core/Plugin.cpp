@@ -50,11 +50,11 @@ struct TextureOutliner final : public Window
 };
 
 
-EditorWindow::EditorWindow(const pl::FileState& registration)
-	: mEditor(registration)
+EditorWindow::EditorWindow(const pl::FileStateSpawner& registration)
+	: mState(registration.spawn())
 {
 
-	for (const auto it : mEditor.mInterfaces)
+	for (const auto it : mState->mInterfaces)
 	{
 		switch (it->mInterfaceId)
 		{
@@ -72,7 +72,7 @@ void EditorWindow::draw(WindowContext* ctx) noexcept
 	if (ImGui::Begin("EditorWindow", &bOpen))
 	{
 		ImGui::Text("Interfaces");
-		for (const auto& str : mEditor.mInterfaces)
+		for (const auto& str : mState->mInterfaces)
 			ImGui::Text(std::to_string(static_cast<u32>(str->mInterfaceId)).c_str());
 		ImGui::End();
 

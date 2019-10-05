@@ -7,9 +7,9 @@
 struct EditorWindow : public WindowManager, public Window
 {
 	~EditorWindow() override = default;
-	EditorWindow(const pl::FileState& registration);
+	EditorWindow(const pl::FileStateSpawner& registration);
 
 	void draw(WindowContext* ctx) noexcept override final;
 
-	const pl::FileState& mEditor;
+	std::unique_ptr<pl::FileState> mState;
 };
