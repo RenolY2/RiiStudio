@@ -9,6 +9,21 @@ namespace libcube { namespace pikmin1 {
  * Contains:
  * 12 u8's
  */
+struct PVWCombiner
+{
+	u8 m_unk1;
+	u8 m_unk2;
+	u8 m_unk4;
+	u8 m_unk5;
+	u8 m_unk6;
+	u8 m_unk7;
+	u8 m_unk8;
+	u8 m_unk9;
+	u8 m_unk10;
+	u8 m_unk11;
+	u8 m_unk12;
+};
+
 
 /* TODO: PVWTevStage
  * Contains:
