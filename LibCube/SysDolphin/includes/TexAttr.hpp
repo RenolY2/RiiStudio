@@ -8,7 +8,7 @@ struct TexAttr
 {
 	constexpr static const char name[] = "Texture Attribute";
 
-	enum class Mode
+	enum class Mode : u16
 	{
 		Default = 0,
 		Unknown1,
@@ -17,23 +17,27 @@ struct TexAttr
 		Translucent //!< XLU
 	};
 
-	u16 m_index;	//2
-	u16 m_tilingMode;	//4
-	Mode m_mode;	//6
+	// If m_image is -1, its not using an image,
+	// If m_image isn't -1, its the index of the image TexAttr is going to attach to (unsure)
+	u16 m_image = -1;
+	// context: plugTexConv assigns to this when "tiling" and then "clamp" is found
+	u16 m_tilingMode;
 	u16 m_unk1;
-	f32 m_unk2;	//10
-	char padding[2];	//12
+	u16 m_unk2;
+	f32 m_unk3;
+	char padding[2];
 
 	TexAttr() = default;
 	~TexAttr() = default;
 
 	static void onRead(oishii::BinaryReader& bReader, TexAttr& context)
 	{
-		context.m_index = bReader.read<u16>();
+		context.m_image = bReader.read<u16>();
 		context.m_tilingMode = bReader.read<u16>();
-		context.m_mode = static_cast<Mode>(bReader.read<u16>());
+
 		context.m_unk1 = bReader.read<u16>();
-		context.m_unk2 = bReader.read<f32>();
+		context.m_unk2 = bReader.read<u16>();
+		context.m_unk3 = bReader.read<f32>();
 	}
 };
 

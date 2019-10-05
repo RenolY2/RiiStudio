@@ -11,9 +11,18 @@ void MOD::read_header(oishii::BinaryReader& bReader)
 	m_header.m_year = bReader.read<u16>();
 	m_header.m_month = bReader.read<u8>();
 	m_header.m_day = bReader.read<u8>();
-	// unsure as to what m_unk is, changes from file to file
-	m_header.m_unk = bReader.read<u32>();
 	DebugReport("Creation date of model file (YYYY/MM/DD): %u/%u/%u\n", m_header.m_year, m_header.m_month, m_header.m_day);
+	// Used to identify what kind of system is being used,
+	// Can be used to identify if using NBT or Classic/Softimage scaling system
+	m_header.m_systemUsed = bReader.read<u32>();
+	const bool usingEmboss = m_header.m_systemUsed & 1;
+	const bool whichScaling = m_header.m_systemUsed & 8;
+	if (usingEmboss)
+		DebugReport("Model file using Emboss NBT!\n");
+	if (whichScaling)
+		DebugReport("Model file using Classic Scaling System!\n");
+	else
+		DebugReport("Model file using SoftImage Scaling System!\n");
 
 	skipPadding(bReader);
 }
