@@ -53,6 +53,7 @@ public:
 	std::vector<TXE>		mTextures;
 	std::vector<TexAttr>	mTexAttrs;
 	std::vector<Material>	mMaterials;
+	std::vector<PVWTevInfo> mShaders;
 	std::vector<Envelope>	mEnvelopes;
 
 	struct CollisionModel
