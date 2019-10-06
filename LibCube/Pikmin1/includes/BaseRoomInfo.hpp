@@ -4,6 +4,8 @@
 
 namespace libcube { namespace pikmin1 {
 
+// Not used anywhere!
+
 struct BaseRoomInfo
 {
 	constexpr static const char name[] = "Base Room Information";

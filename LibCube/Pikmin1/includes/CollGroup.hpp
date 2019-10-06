@@ -38,14 +38,15 @@ struct CollGroup
 	{
 		skipPadding(bReader);
 
+		// Collision boundaries!
 		context.m_collBounds << bReader;
 
+		// Figured out from decompile
 		context.m_gridSizeRadius = bReader.read<f32>();
 		context.m_gridSizeX = bReader.read<u32>();
 		context.m_gridSizeY = bReader.read<u32>();
 		
 		context.m_blockSize = bReader.read<u32>();
-
 		u32 maxCollTris = 0;
 		for (u32 i = 0; i < context.m_blockSize; i++)
 		{
@@ -66,9 +67,10 @@ struct CollGroup
 					byte = bReader.read<u8>();
 			}
 		}
-
 		DebugReport("Max collision triangles within a block: %u\n", maxCollTris);
 
+		// This loop is curious, the only actual purpose is to read ints
+		// and to figure out the maximum distance from the centre of the map
 		for (u32 i = 0; i < context.m_gridSizeY; i++)
 		{
 			for (u32 j = 0; j < context.m_gridSizeX; j++)

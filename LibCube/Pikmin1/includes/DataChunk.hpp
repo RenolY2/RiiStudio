@@ -1,7 +1,6 @@
 #pragma once
 
 #include "essential_functions.hpp"
-#include <oishii/writer/binary_writer.hxx>
 #include "CmdStream.hpp"
 
 namespace libcube { namespace pikmin1 {

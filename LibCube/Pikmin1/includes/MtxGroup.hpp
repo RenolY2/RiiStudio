@@ -23,10 +23,10 @@ struct MtxGroup
 			isDependant = bReader.read<u16>();
 
 		context.m_dispLists.resize(bReader.read<u32>());
-
 		for (auto& dLists : context.m_dispLists)
 		{
-			bReader.dispatch<DispList, oishii::Direct, false>(dLists);
+			// Read DispLists
+			dLists << bReader;
 		}
 	}
 };
