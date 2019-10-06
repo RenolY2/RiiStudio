@@ -23,6 +23,8 @@ struct BaseCollTriInfo
 	BaseCollTriInfo() = default;
 	~BaseCollTriInfo() = default;
 
+	// WHAT EVEN IS THIS STRUCT SUPPOSED TO BE?
+
 	static void onRead(oishii::BinaryReader& bReader, BaseCollTriInfo& context)
 	{
 		context.m_unk1 = bReader.read<u32>();

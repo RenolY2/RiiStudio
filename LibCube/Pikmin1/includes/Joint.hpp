@@ -37,9 +37,9 @@ struct Joint
 		context.m_useVolume = usingIdentifier != 0;
 		// context: plugTexConv assigns this variable on reading dmd file when "light" is found
 		context.m_foundLightGroup = (usingIdentifier & 0x4000) != 0;
-
 		// These have been confirmed to be correct
 		context.m_boundingBox << bReader;
+		// Always 0, when writing is always set to 0
 		context.m_volumeRadius = bReader.read<f32>();
 		read(bReader, context.m_scale);
 		read(bReader, context.m_rotation);

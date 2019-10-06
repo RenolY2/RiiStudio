@@ -42,7 +42,9 @@ struct Batch
 		context.m_depMTXGroups = 0;
 		for (auto& mGroup : context.m_mtxGroups)
 		{
+			// Read mtxgroup
 			mGroup << bReader;
+			// Assign appropriate mtx dependant faces (?)
 			if (mGroup.m_dependant.size() > context.m_depMTXGroups)
 				context.m_depMTXGroups = static_cast<u32>(mGroup.m_dependant.size());
 		}

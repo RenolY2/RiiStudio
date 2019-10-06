@@ -145,13 +145,13 @@ void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 		}
 	}
 
+	// Usually, after the EoF chunk, it would be the end of the file
+	// But! If there are still bytes after EoF it is assumed there is an INI
 	if (bReader.tell() != bReader.endpos())
 	{
 		DebugReport("INI file found at end of file\n");
 	}
-
 	DebugReport("Done reading file\n");
-	context.removeMtxDependancy();
 }
 
 void MOD::removeMtxDependancy()

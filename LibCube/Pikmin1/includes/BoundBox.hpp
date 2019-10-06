@@ -4,6 +4,7 @@
 
 namespace libcube { namespace pikmin1 {
 
+// Used to store minimum and maximum boundary values, denoted by 2 vec3s
 struct BoundBox
 {
 	constexpr static const char name[] = "Bounding Box";

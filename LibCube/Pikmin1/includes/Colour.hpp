@@ -45,7 +45,8 @@ struct ShortColour
 
 	static void onRead(oishii::BinaryReader& bReader, ShortColour& context)
 	{
-		context.set(bReader.read<u16>(),
+		context.set
+		(	bReader.read<u16>(),
 			bReader.read<u16>(),
 			bReader.read<u16>(),
 			bReader.read<u16>());

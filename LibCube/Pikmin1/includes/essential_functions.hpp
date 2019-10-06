@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oishii/reader/binary_reader.hxx>
+#include <oishii/writer/binary_writer.hxx>
 #include <vector>
 #include <ThirdParty/glm/glm.hpp>
 
