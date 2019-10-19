@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <tuple>
 
-namespace libcube { namespace jsystem {
+namespace libcube::jsystem {
 
 struct SceneGraph
 {
@@ -337,10 +337,9 @@ struct io_wrapper
 	template<typename C>
 	static void onRead(oishii::BinaryReader&, C&)
 	{
-		printf("Not implemented\n");
+		DebugReport("Unimplemented IO wrapper called.\n");
 	}
 };
-
 
 struct MatLoader
 {
@@ -401,11 +400,7 @@ public:
 	template<typename TIdx, typename T>
 	void indexedContained(T& out, MatSec sec, u32 stride)
 	{
-		const auto ofs = indexed<TIdx>(sec, stride).ofs;
-
-		if (!ofs)
-			return;
-
+		if (const auto ofs = indexed<TIdx>(sec, stride).ofs)
 		{
 			oishii::Jump<oishii::Whence::Set> g(reader, ofs);
 
@@ -422,18 +417,14 @@ public:
 	
 		for (auto& it : out)
 		{
-			const auto ofs = indexed<TIdx>(sec, stride).ofs;
-		
-			if (!ofs)
-				break;
-		
-			// Read
+			if (const auto ofs = indexed<TIdx>(sec, stride).ofs)
 			{
 				oishii::Jump<oishii::Whence::Set> g(reader, ofs);
 				// oishii::BinaryReader::ScopedRegion n(reader, io_wrapper<T::value_type>::getName());
 				io_wrapper<T::value_type>::onRead(reader, it);
+
+				++out.nElements;
 			}
-			++out.nElements;
 		}
 	}
 };
@@ -496,7 +487,12 @@ struct io_wrapper<gx::ChannelControl>
 		out.Material = static_cast<gx::ColorSource>(reader.read<u8>());
 		out.lightMask = static_cast<gx::LightID>(reader.read<u8>());
 		out.diffuseFn = static_cast<gx::DiffuseFunction>(reader.read<u8>());
-		out.attenuationFn = static_cast<gx::AttenuationFunction>(reader.read<u8>());
+        constexpr const std::array<gx::AttenuationFunction, 4> cvt = {
+            gx::AttenuationFunction::None,
+            gx::AttenuationFunction::Specular,
+            gx::AttenuationFunction::None,
+            gx::AttenuationFunction::Spotlight};
+		out.attenuationFn = cvt[reader.read<u8>()];
 		out.Ambient = static_cast<gx::ColorSource>(reader.read<u8>());
 
 		reader.read<u16>();
@@ -857,4 +853,4 @@ bool BMDImporter::tryRead(oishii::BinaryReader& reader, pl::FileState& state)
 	return !error;
 }
 
-} } // namespace libcube::jsystem
+} // namespace libcube::jsystem

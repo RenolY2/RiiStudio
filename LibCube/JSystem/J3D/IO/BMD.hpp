@@ -9,7 +9,7 @@
 #include <LibCube/JSystem/J3D/Collection.hpp>
 #include <LibRiiEditor/pluginapi/IO/Importer.hpp>
 
-namespace libcube { namespace jsystem {
+namespace libcube::jsystem {
 
 class BMDImporter : public pl::Importer
 {
@@ -73,4 +73,4 @@ class BMDImporterSpawner : public pl::ImporterSpawner
 
 
 
-} } // namespace libcube::jsystem
+} // namespace libcube::jsystem
