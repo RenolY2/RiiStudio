@@ -17,6 +17,27 @@
 
 namespace libcube::jsystem {
 
+std::vector<std::string> readNameTable(oishii::BinaryReader& reader)
+{
+	const auto start = reader.tell();
+	std::vector<std::string> collected(reader.read<u16>());
+	reader.read<u16>();
+
+	for (auto& e : collected)
+	{
+		const auto [hash, ofs] = reader.readX<u16, 2>();
+		{
+			oishii::Jump<oishii::Whence::Set> g(reader, start + ofs);
+
+			for (char c = reader.read<s8>(); c; c = reader.read<s8>())
+				e.push_back(c);
+		}
+	}
+
+	return collected;
+}
+
+#pragma region INF1
 struct SceneGraph
 {
 	static constexpr const char name[] = "Scenegraph";
@@ -107,7 +128,9 @@ struct SceneGraph
 		}
 	}
 };
+#pragma endregion
 
+#pragma region Sectioning
 bool BMDImporter::enterSection(oishii::BinaryReader& reader, u32 id)
 {
 	const auto sec = mSections.find(id);
@@ -128,7 +151,9 @@ struct ScopedSection : private oishii::BinaryReader::ScopedRegion
 	}
 	u32 start;
 };
+#pragma endregion
 
+#pragma region INF1
 void BMDImporter::readInformation(oishii::BinaryReader& reader, BMDOutputContext& ctx) noexcept
 {
 	if (enterSection(reader, 'INF1'))
@@ -146,6 +171,9 @@ void BMDImporter::readInformation(oishii::BinaryReader& reader, BMDOutputContext
 		reader.dispatch<SceneGraph, oishii::Indirection<0, s32, oishii::Whence::At>>(ctx, g.start);
 	}
 }
+#pragma endregion
+
+#pragma region EVP1/DRW1
 void BMDImporter::readDrawMatrices(oishii::BinaryReader& reader, BMDOutputContext& ctx) noexcept
 {
 
@@ -217,27 +245,9 @@ void BMDImporter::readDrawMatrices(oishii::BinaryReader& reader, BMDOutputContex
 		}
 	}
 }
+#pragma endregion
 
-std::vector<std::string> readNameTable(oishii::BinaryReader& reader)
-{
-	const auto start = reader.tell();
-	std::vector<std::string> collected(reader.read<u16>());
-	reader.read<u16>();
-
-	for (auto& e : collected)
-	{
-		const auto[hash, ofs] = reader.readX<u16, 2>();
-		{
-			oishii::Jump<oishii::Whence::Set> g(reader, start + ofs);
-
-			for (char c = reader.read<s8>(); c; c = reader.read<s8>())
-				e.push_back(c);
-		}
-	}
-
-	return collected;
-}
-
+#pragma region JNT1
 void BMDImporter::readJoints(oishii::BinaryReader& reader, BMDOutputContext& ctx) noexcept
 {
 	if (enterSection(reader, 'JNT1'))
@@ -295,7 +305,9 @@ void BMDImporter::readJoints(oishii::BinaryReader& reader, BMDOutputContext& ctx
 		}
 	}
 }
+#pragma endregion
 
+#pragma region MAT3
 enum class MatSec
 {
 // Material entries, lut, and name table handled separately
@@ -774,6 +786,7 @@ void BMDImporter::readMaterials(oishii::BinaryReader& reader, BMDOutputContext& 
 		}
 	}
 }
+#pragma endregion
 
 void BMDImporter::lex(oishii::BinaryReader& reader, u32 sec_count) noexcept
 {
@@ -845,7 +858,6 @@ void BMDImporter::readBMD(oishii::BinaryReader& reader, BMDOutputContext& ctx)
 
 	// FIXME: MDL3
 }
-
 bool BMDImporter::tryRead(oishii::BinaryReader& reader, pl::FileState& state)
 {
 	//oishii::BinaryReader::ScopedRegion g(reader, "J3D Binary Model Data (.bmd)");
