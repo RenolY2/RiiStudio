@@ -9,9 +9,10 @@ struct BaseCollTriInfo
 {
 	constexpr static const char name[] = "Base Collision Triangle Information";
 	u32 m_unk1;
-	u32 m_unk2;
-	u32 m_unk3;
-	u32 m_unk4;
+	// These form a triangle of collision
+	u32 m_faceA;
+	u32 m_faceB;
+	u32 m_faceC;
 
 	u16 m_unk5;
 	u16 m_unk6;
@@ -28,9 +29,9 @@ struct BaseCollTriInfo
 	static void onRead(oishii::BinaryReader& bReader, BaseCollTriInfo& context)
 	{
 		context.m_unk1 = bReader.read<u32>();
-		context.m_unk2 = bReader.read<u32>();
-		context.m_unk3 = bReader.read<u32>();
-		context.m_unk4 = bReader.read<u32>();
+		context.m_faceA = bReader.read<u32>();
+		context.m_faceB = bReader.read<u32>();
+		context.m_faceC = bReader.read<u32>();
 
 		context.m_unk5 = bReader.read<u16>();
 		context.m_unk6 = bReader.read<u16>();
