@@ -18,7 +18,7 @@ struct BaseCollTriInfo
 	u16 m_unk7;
 	u16 m_unk8;
 
-	Plane m_unk9;
+	Plane m_collisionPlane;
 
 	BaseCollTriInfo() = default;
 	~BaseCollTriInfo() = default;
@@ -37,7 +37,7 @@ struct BaseCollTriInfo
 		context.m_unk7 = bReader.read<u16>();
 		context.m_unk8 = bReader.read<u16>();
 
-		context.m_unk9 << bReader;
+		context.m_collisionPlane << bReader;
 	}
 };
 

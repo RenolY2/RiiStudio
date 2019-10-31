@@ -54,6 +54,25 @@ void MOD::read_materials(oishii::BinaryReader& bReader)
 
 }
 
+static void PrintMODStats(MOD& toPrint)
+{
+	DebugReport("There are %zu %s\n", toPrint.m_vertices.size(), toPrint.m_vertices.name);
+	DebugReport("There are %zu %s\n", toPrint.m_vnorms.size(), toPrint.m_vnorms.name);
+	DebugReport("There are %zu %s\n", toPrint.m_nbt.size(), toPrint.m_nbt.name);
+	DebugReport("There are %zu %s\n", toPrint.m_colours.size(), toPrint.m_colours.name);
+	for (u32 i = 0; i < 8; i++)
+		DebugReport("There are %zu Texture Coordinates in TEXCOORD%d\n", toPrint.m_texcoords[i].size(), i);
+	DebugReport("There are %zu %s\n", toPrint.m_textures.size(), toPrint.m_textures.name);
+	DebugReport("There are %zu %s\n", toPrint.m_texattrs.size(), toPrint.m_texattrs.name);
+	DebugReport("There are %zu %s\n", toPrint.m_vtxmatrices.size(), toPrint.m_vtxmatrices.name);
+	DebugReport("There are %zu %s\n", toPrint.m_envelopes.size(), toPrint.m_envelopes.name);
+	DebugReport("There are %zu %s\n", toPrint.m_batches.size(), toPrint.m_batches.name);
+	DebugReport("There are %zu %s\n", toPrint.m_joints.size(), toPrint.m_joints.name);
+	DebugReport("There are %zu %s\n", toPrint.m_jointNames.size(), toPrint.m_jointNames.name);
+	DebugReport("There are %zu groups of basic collision triangle information\n", toPrint.m_baseCollTriInfo.size());
+	DebugReport("There are %zu groups of basic room information\n", toPrint.m_baseRoomInfo.size());
+}
+
 void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 {
 	bReader.setEndian(true); // big endian
@@ -151,6 +170,8 @@ void MOD::onRead(oishii::BinaryReader& bReader, MOD& context)
 		DebugReport("INI file found at end of file\n");
 	}
 	DebugReport("Done reading file\n");
+
+	PrintMODStats(context);
 }
 
 void MOD::removeMtxDependancy()
