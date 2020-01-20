@@ -2,10 +2,11 @@
 
 #include "essential_functions.hpp"
 #include <LibCube/Common/BoundBox.hpp>
+#include <LibCube/Export/GCCollection.hpp>
 
 namespace libcube { namespace pikmin1 {
 
-struct Joint
+struct Joint : public GCCollection::IBoneDelegate
 {
 	constexpr static const char name[] = "Joint";
 
@@ -52,6 +53,72 @@ struct Joint
 			matpoly.m_unk2 = bReader.read<u16>();
 		}
 	}
+
+	Billboard getBillboard() const override
+	{
+		return Billboard::None;
+	}
+	void setBillboard(Billboard) override {}
+
+	std::string getName() override { return "Untitled Bone"; }
+	int getId() override { return m_index; }
+	
+	virtual lib3d::Coverage supportsBoneFeature(lib3d::BoneFeatures f)
+	{
+		switch (f)
+		{
+		case lib3d::BoneFeatures::SRT:
+		case lib3d::BoneFeatures::Hierarchy:
+		case lib3d::BoneFeatures::AABB:
+		case lib3d::BoneFeatures::BoundingSphere:
+			return lib3d::Coverage::ReadWrite;
+		case lib3d::BoneFeatures::SegmentScaleCompensation:
+		case lib3d::BoneFeatures::StandardBillboards:
+		default:
+			return lib3d::Coverage::Unsupported;
+
+		}
+	}
+
+	lib3d::SRT3 getSRT() const override
+	{
+		return { m_scale, m_rotation, m_translation };
+	}
+	void setSRT(const lib3d::SRT3& srt) override
+	{
+		m_scale = srt.scale;
+		m_rotation = srt.rotation;
+		m_translation = srt.translation;
+	}
+
+	int getParent() const override { return -1; }
+	void setParent(int id) override {}
+	u32 getNumChildren() const override { return 0; }
+	int getChild(u32 idx) const override { return -1; }
+	int addChild(int child) override { return -1; }
+	int setChild(u32 idx, int id) override { return -1; }
+	
+	lib3d::AABB getAABB() const override
+	{
+		return { m_boundingBox.m_minBounds, m_boundingBox.m_maxBounds };
+	}
+	void setAABB(const lib3d::AABB& v) override
+	{
+		m_boundingBox.m_minBounds = v.min;
+		m_boundingBox.m_maxBounds = v.max;
+	}
+
+	virtual float getBoundingRadius() const
+	{
+		return m_volumeRadius;
+	}
+	virtual void setBoundingRadius(float v)
+	{
+		m_volumeRadius = v;
+	}
+
+	virtual bool getSSC() const override { return false; }
+	virtual void setSSC(bool) {}
 };
 
 inline void operator<<(Joint& context, oishii::BinaryReader& bReader)
