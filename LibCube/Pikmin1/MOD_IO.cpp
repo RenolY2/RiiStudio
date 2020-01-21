@@ -9,7 +9,7 @@ bool MODImporter::tryRead(oishii::BinaryReader& bReader, pl::FileState& state)
 	// Chunk descriptor
 	u32 cDescriptor = 0;
 	// 0xFFFF means EoF for this file, aka (u16)-1
-	while ((cDescriptor = bReader.read<u32>()) != (u16)-1)
+	while (/* bReader.tell() < bReader.endpos() && */(cDescriptor = bReader.read<u32>()) != (u16)-1)
 	{
 		// Chunk start
 		const u32 cStart = bReader.tell() - 4;
@@ -97,6 +97,12 @@ bool MODImporter::tryRead(oishii::BinaryReader& bReader, pl::FileState& state)
 			// Because we haven't implemented it, we'll have to skip it
 			skipChunk(bReader, cLength);
 			break;
+		}
+
+		if (bReader.tell() > bReader.endpos())
+		{
+			printf("Fatal error.. attempted to read beyond end of the stream\n");
+			throw "Read beyond stream";
 		}
 	}
 
