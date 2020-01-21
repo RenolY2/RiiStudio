@@ -105,7 +105,7 @@ bool BMDImporter::tryRead(oishii::BinaryReader& reader, pl::FileState& state)
 	BMDOutputContext ctx{ j3dc.mModel, reader };
 
 	// reader.add_bp<u32>(8);
-	//reader.add_bp(0x2cc0, 16);
+	// reader.add_bp(0x2d3a-16, 16+16);
 
 	readBMD(reader, ctx);
 	return !error;
