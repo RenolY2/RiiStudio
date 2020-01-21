@@ -10,7 +10,12 @@ struct Joint : public GCCollection::IBoneDelegate
 {
 	constexpr static const char name[] = "Joint";
 
-	u32 m_index;
+	u32 mID; // Set by loader
+	std::vector<int> mChildren;
+	std::string mName;
+
+	// Real fields
+	u32 m_parentIndex;
 	bool m_useVolume;
 	bool m_foundLightGroup;
 	AABB m_boundingBox;
@@ -31,7 +36,7 @@ struct Joint : public GCCollection::IBoneDelegate
 	static void onRead(oishii::BinaryReader& bReader, Joint& context)
 	{
 		// Known to be -1 on first iteration (null)
-		context.m_index = bReader.read<u32>();
+		context.m_parentIndex = bReader.read<u32>();
 
 		const u16 usingIdentifier = static_cast<u16>(bReader.read<u32>());
 		// Oddly, only assigned in plugTexConv when volume_min or volume_max has been found
@@ -60,8 +65,8 @@ struct Joint : public GCCollection::IBoneDelegate
 	}
 	void setBillboard(Billboard) override {}
 
-	std::string getName() override { return "Untitled Bone"; }
-	int getId() override { return m_index; }
+	std::string getName() override { return mName; }
+	int getId() override { return mID; }
 	
 	virtual lib3d::Coverage supportsBoneFeature(lib3d::BoneFeatures f)
 	{
@@ -91,12 +96,12 @@ struct Joint : public GCCollection::IBoneDelegate
 		m_translation = srt.translation;
 	}
 
-	int getParent() const override { return -1; }
-	void setParent(int id) override {}
-	u32 getNumChildren() const override { return 0; }
-	int getChild(u32 idx) const override { return -1; }
-	int addChild(int child) override { return -1; }
-	int setChild(u32 idx, int id) override { return -1; }
+	int getParent() const override { return m_parentIndex; }
+	void setParent(int id) override { m_parentIndex = id; }
+	u32 getNumChildren() const override { return mChildren.size(); }
+	int getChild(u32 idx) const override { return mChildren[idx]; }
+	int addChild(int child) override { mChildren.push_back(child);  return mChildren.size() - 1; }
+	int setChild(u32 idx, int id) override { int old = mChildren[idx]; mChildren[idx] = id; return old; }
 	
 	lib3d::AABB getAABB() const override
 	{
