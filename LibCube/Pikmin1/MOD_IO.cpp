@@ -100,6 +100,18 @@ bool MODImporter::tryRead(oishii::BinaryReader& bReader, pl::FileState& state)
 		}
 	}
 
+	// Construct joint relationships
+	for (int i = 0; i < mdl.mJoints.size(); ++i)
+	{
+		auto& j = mdl.mJoints[i];
+
+		j.mID = i;
+		if (j.m_parentIndex != -1)
+			mdl.mJoints[j.m_parentIndex].mChildren.push_back(j.mID);
+		if (mdl.mJointNames.empty())
+			j.mName = std::string("Joint #") + std::to_string(i);
+	}
+
 	// Usually, after the EoF chunk, it would be the end of the file
 	// But! If there are still bytes after EoF it is assumed there is an INI
 	if (bReader.tell() != bReader.endpos())
