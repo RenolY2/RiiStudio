@@ -83,11 +83,7 @@ struct JNT1Node final : public oishii::v2::Node
 		mId = "JNT1";
 		mLinkingRestriction.alignment = 32;
 	}
-	Result gatherChildren(NodeDelegate& d)
-	{
-		//d.addNode();
-		return {};
-	}
+
 	struct JointData : public oishii::v2::Node
 	{
 		JointData(const J3DModel& mdl)
@@ -171,7 +167,7 @@ struct JNT1Node final : public oishii::v2::Node
 	Result write(oishii::v2::Writer& writer) const noexcept override
 	{
 		writer.write<u32, oishii::EndianSelect::Big>('JNT1');
-		writer.writeLink<s32>({ *this }, { "DRW1" });
+		writer.writeLink<s32>({ *this }, { "SHP1" });
 
 		writer.write<u16>(mModel.mJoints.size());
 		writer.write<u16>(-1);
