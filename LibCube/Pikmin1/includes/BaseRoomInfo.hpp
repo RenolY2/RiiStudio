@@ -4,7 +4,7 @@
 
 namespace libcube { namespace pikmin1 {
 
-// Not used anywhere!
+// Unused in game
 
 struct BaseRoomInfo
 {
