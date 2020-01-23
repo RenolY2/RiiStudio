@@ -5,27 +5,13 @@
 
 namespace libcube { namespace pikmin1 {
 
-//TODO: VtxDescriptor
-struct VtxDescriptor
-{
-	u32 m_originalVCD;
-
-	VtxDescriptor() = default;
-	~VtxDescriptor() = default;
-
-	void toPikmin1(u32 vcd)
-	{
-		m_originalVCD = vcd;
-	}
-};
-
 struct Batch
 {
 	constexpr static const char name[] = "Batch";
 
 	u32 m_embossBump = 0;
 	u32 m_depMTXGroups = 0;
-	VtxDescriptor m_vcd;
+	int m_vcd;
 
 	std::vector<MtxGroup> m_mtxGroups;
 
@@ -36,7 +22,7 @@ struct Batch
 	{
 		// Read the batch variables
 		context.m_embossBump = bReader.read<u32>(); // whether mesh is using emboss NBT or not
-		context.m_vcd.toPikmin1(bReader.read<u32>());
+		context.m_vcd = bReader.read<u32>();
 
 		context.m_mtxGroups.resize(bReader.read<u32>());
 		context.m_depMTXGroups = 0;
