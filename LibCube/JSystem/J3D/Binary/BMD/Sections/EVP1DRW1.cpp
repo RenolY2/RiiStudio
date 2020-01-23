@@ -233,7 +233,7 @@ struct DRW1Node
 		writer.write<u32, oishii::EndianSelect::Big>('DRW1');
 		writer.writeLink<s32>(oishii::v2::Link{
 			oishii::v2::Hook(getSelf()),
-			oishii::v2::Hook("VTX1"/*getSelf(), oishii::Hook::EndOfChildren*/) });
+			oishii::v2::Hook("JNT1"/*getSelf(), oishii::Hook::EndOfChildren*/) });
 
 		u32 evp = 0;
 		for (const auto& drw : mdl.mDrawMatrices)
@@ -302,6 +302,17 @@ struct DRW1Node
 				writer.write<u16>(drw.mWeights.size() > 1 ? std::find(envelopesToWrite.begin(), envelopesToWrite.end(), i) - envelopesToWrite.begin() : drw.mWeights[0].boneId);
 				++i;
 			}
+
+			// Bug in nintendo's code corrected on runtime we need to accomodate for!
+			i = 0;
+			for (const auto& drw : mMdl.mDrawMatrices)
+			{
+				assert(!drw.mWeights.empty());
+				if (drw.mWeights.size() > 1)
+					writer.write<u16>(std::find(envelopesToWrite.begin(), envelopesToWrite.end(), i) - envelopesToWrite.begin());
+				++i;
+			}
+
 			return {};
 		}
 
