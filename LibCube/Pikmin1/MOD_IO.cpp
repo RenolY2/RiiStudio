@@ -124,9 +124,9 @@ bool MODImporter::tryRead(oishii::BinaryReader& bReader, pl::FileState& state)
 	{
 		DebugReport("INI file found at end of file\n");
 	}
-	DebugReport("Done reading file\n");
 
-	// PrintMODStats(context);
+
+	DebugReport("Done reading file\n");
 
 	return true;
 }
