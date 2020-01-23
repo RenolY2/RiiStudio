@@ -66,21 +66,27 @@ void readSHP1(BMDOutputContext& ctx)
         auto& shape = ctx.mdl.mShapes[si];
         reader.seekSet(g.start + ofsShapeData + ctx.shapeIdLut[si] * 0x28);
         shape.id = ctx.shapeIdLut[si];
+		printf("Shape (index=%u, id=%u) {\n", si, shape.id);
         // shape.name = nameTable[si];
         shape.mode = static_cast<ShapeData::Mode>(reader.read<u8>());
         assert(shape.mode < ShapeData::Mode::Max);
         reader.read<u8>();
         // Number of matrix primitives (mtxGrpCnt)
         auto num_matrix_prims = reader.read<u16>();
+		printf("   num_matrix_prims=%u\n", (u32)num_matrix_prims);
         auto ofs_vcd_list = reader.read<u16>();
+		printf("   ofs_vcd_list=%u\n", (u32)ofs_vcd_list);
         // current mtx/mtx list
         auto first_matrix_list = reader.read<u16>();
-        // "Packet" or mtx prim summary (accessor) idx
+		printf("   first_matrix_list=%u\n", (u32)first_matrix_list);
+		// "Packet" or mtx prim summary (accessor) idx
         auto first_mtx_prim_idx = reader.read<u16>();
-		assert(first_mtx_prim_idx == si);
+		printf("   first_mtx_prim_idx=%u\n", (u32)first_mtx_prim_idx);
+		assert(first_matrix_list == first_mtx_prim_idx);
         reader.read<u16>();
         shape.bsphere = reader.read<f32>();
         shape.bbox << reader;
+		printf("}\n");
 
         // Read VCD attributes
         reader.seekSet(g.start + ofsVcdList + ofs_vcd_list);
@@ -352,12 +358,12 @@ struct SHP1Node final : public oishii::v2::Node
 					writer.write<u16>(shp.mMatrixPrimitives.size());
 					writer.writeLink<u16>({ "SHP1::VCDList" }, { std::string("SHP1::VCDList::") + std::to_string(i) }); // offset into VCD list
 					// TODO -- we don't support compression..
-					writer.write<u16>(i); // Matrix list index of this prim
 					int mpi = 0;
 					for (int j = 0; j < i; ++j)
 					{
 						mpi += mMdl.mShapes[j].mMatrixPrimitives.size();
 					}
+					writer.write<u16>(mpi); // Matrix list index of this prim
 					writer.write<u16>(mpi); // Matrix primitive index
 					writer.write<u16>(0xffff);
 					writer.write<f32>(shp.bsphere);

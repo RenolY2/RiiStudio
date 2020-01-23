@@ -1,4 +1,5 @@
 #include <LibCube/JSystem/J3D/Binary/BMD/Sections.hpp>
+#include <oishii/v2/writer/binary_writer.hxx>
 
 namespace libcube::jsystem {
 
@@ -44,6 +45,11 @@ struct io_wrapper
 	static void onRead(oishii::BinaryReader&, C&)
 	{
 		DebugReport("Unimplemented IO wrapper called.\n");
+	}
+	template<typename C>
+	static void onWrite(oishii::v2::Writer&, const C&)
+	{
+		DebugReport("Unimplemented IO writer wrapper called.\n");
 	}
 };
 
@@ -135,6 +141,7 @@ public:
 		}
 	}
 };
+
 template<>
 struct io_wrapper<gx::ZMode>
 {
@@ -144,6 +151,13 @@ struct io_wrapper<gx::ZMode>
 		out.function = static_cast<gx::Comparison>(reader.read<u8>());
 		out.update = reader.read<u8>();
 		reader.read<u8>();
+	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::ZMode& in)
+	{
+		writer.write<u8>(in.compare);
+		writer.write<u8>(static_cast<u8>(in.function));
+		writer.write<u8>(in.update);
+		writer.write<u8>(0xff);
 	}
 };
 
@@ -159,6 +173,16 @@ struct io_wrapper<gx::AlphaComparison>
 		c.refRight = reader.read<u8>();
 		reader.seek(3);
 	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::AlphaComparison& in)
+	{
+		writer.write<u8>(static_cast<u8>(in.compLeft));
+		writer.write<u8>(in.refLeft);
+		writer.write<u8>(static_cast<u8>(in.op));
+		writer.write<u8>(static_cast<u8>(in.compRight));
+		writer.write<u8>(static_cast<u8>(in.refRight));
+		for (int i = 0; i < 3; ++i)
+			writer.write<u8>(0xff);
+	}
 };
 
 template<>
@@ -170,6 +194,13 @@ struct io_wrapper<gx::BlendMode>
 		c.source = static_cast<gx::BlendModeFactor>(reader.read<u8>());
 		c.dest = static_cast<gx::BlendModeFactor>(reader.read<u8>());
 		c.logic = static_cast<gx::LogicOp>(reader.read<u8>());
+	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::BlendMode& in)
+	{
+		writer.write<u8>(static_cast<u8>(in.type));
+		writer.write<u8>(static_cast<u8>(in.source));
+		writer.write<u8>(static_cast<u8>(in.dest));
+		writer.write<u8>(static_cast<u8>(in.logic));
 	}
 };
 
@@ -183,6 +214,13 @@ struct io_wrapper<gx::Color>
 		out.b = reader.read<u8>();
 		out.a = reader.read<u8>();
 	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::Color& in)
+	{
+		writer.write<u8>(in.r);
+		writer.write<u8>(in.g);
+		writer.write<u8>(in.b);
+		writer.write<u8>(in.a);
+	}
 };
 
 template<>
@@ -194,6 +232,7 @@ struct io_wrapper<gx::ChannelControl>
 		out.Material = static_cast<gx::ColorSource>(reader.read<u8>());
 		out.lightMask = static_cast<gx::LightID>(reader.read<u8>());
 		out.diffuseFn = static_cast<gx::DiffuseFunction>(reader.read<u8>());
+		// TODO Data loss?
 		constexpr const std::array<gx::AttenuationFunction, 4> cvt = {
 			gx::AttenuationFunction::None,
 			gx::AttenuationFunction::Specular,
@@ -203,6 +242,22 @@ struct io_wrapper<gx::ChannelControl>
 		out.Ambient = static_cast<gx::ColorSource>(reader.read<u8>());
 
 		reader.read<u16>();
+	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::ChannelControl& in)
+	{
+		writer.write<u8>(in.enabled);
+		writer.write<u8>(static_cast<u8>(in.Material));
+		writer.write<u8>(static_cast<u8>(in.lightMask));
+		writer.write<u8>(static_cast<u8>(in.diffuseFn));
+		assert(static_cast<u8>(in.attenuationFn) <= static_cast<u8>(gx::AttenuationFunction::None));
+		constexpr const std::array<u8, 3> cvt {
+			1, // spec
+			3, // spot
+			0 // none
+		};
+		writer.write<u8>(cvt[static_cast<u8>(in.attenuationFn)]);
+		writer.write<u8>(static_cast<u8>(in.Ambient));
+		writer.write<u16>(-1);
 	}
 };
 template<>
@@ -215,6 +270,13 @@ struct io_wrapper<gx::ColorS10>
 		out.b = reader.read<s16>();
 		out.a = reader.read<s16>();
 	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::ColorS10& in)
+	{
+		writer.write<s16>(in.r);
+		writer.write<s16>(in.g);
+		writer.write<s16>(in.b);
+		writer.write<s16>(in.a);
+	}
 };
 
 template<>
@@ -225,6 +287,15 @@ struct io_wrapper<Material::NBTScale>
 		c.enable = static_cast<bool>(reader.read<u8>());
 		reader.seek(3);
 		c.scale << reader;
+	}
+	static void onWrite(oishii::v2::Writer& writer, const Material::NBTScale& in)
+	{
+		writer.write<u8>(in.enable);
+		for (int i = 0; i < 3; ++i)
+			writer.write<u8>(-1);
+		writer.write<f32>(in.scale.x);
+		writer.write<f32>(in.scale.y);
+		writer.write<f32>(in.scale.z);
 	}
 };
 
@@ -242,6 +313,13 @@ struct io_wrapper<gx::TexCoordGen>
 		// Assume no postmatrix
 		ctx.normalize = false;
 		ctx.postMatrix = gx::PostTexMatrix::Identity;
+	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::TexCoordGen& in)
+	{
+		writer.write<u8>(static_cast<u8>(in.func));
+		writer.write<u8>(static_cast<u8>(in.sourceParam));
+		writer.write<u8>(static_cast<u8>(in.matrix));
+		writer.write<u8>(-1);
 	}
 };
 
@@ -265,7 +343,25 @@ struct io_wrapper<Material::TexMatrix>
 		c.rotate = static_cast<f32>(reader.read<s16>()) * 180.f / (f32)0x7FFF;
 		reader.read<u16>();
 		c.translate << reader;
-		// TODO: effect matrix
+		for (auto& f : c.effectMatrix)
+			f = reader.read<f32>();
+	}
+	static void onWrite(oishii::v2::Writer& writer, const Material::TexMatrix& in)
+	{
+		writer.write<u8>(static_cast<u8>(in.projection));
+		writer.write<u8>(static_cast<u8>(in.mappingMethod) | (in.maya ? 0x80 : 0));
+		writer.write<u16>(-1);
+		writer.write<f32>(in.origin.x);
+		writer.write<f32>(in.origin.y);
+		writer.write<f32>(in.origin.z);
+		writer.write<f32>(in.scale.x);
+		writer.write<f32>(in.scale.y);
+		writer.write<f32>(static_cast<f32>(in.rotate * (f32)0x7FFF / 180.0f));
+		writer.write<u16>(-1);
+		writer.write<f32>(in.translate.x);
+		writer.write<f32>(in.translate.y);
+		for (const auto f : in.effectMatrix)
+			writer.write<f32>(f);
 	}
 };
 
@@ -282,6 +378,12 @@ struct io_wrapper<SwapSel>
 		c.texSel = reader.read<u8>();
 		reader.read<u16>();
 	}
+	static void onWrite(oishii::v2::Writer& writer, const SwapSel& in)
+	{
+		writer.write<u8>(in.colorChanSel);
+		writer.write<u8>(in.texSel);
+		writer.write<u16>(-1);
+	}
 };
 template<>
 struct io_wrapper<gx::Shader::SwapTableEntry>
@@ -292,6 +394,13 @@ struct io_wrapper<gx::Shader::SwapTableEntry>
 		c.g = static_cast<gx::ColorComponent>(reader.read<u8>());
 		c.b = static_cast<gx::ColorComponent>(reader.read<u8>());
 		c.a = static_cast<gx::ColorComponent>(reader.read<u8>());
+	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::Shader::SwapTableEntry& in)
+	{
+		writer.write<u8>(static_cast<u8>(in.r));
+		writer.write<u8>(static_cast<u8>(in.g));
+		writer.write<u8>(static_cast<u8>(in.b));
+		writer.write<u8>(static_cast<u8>(in.a));
 	}
 };
 
@@ -311,6 +420,13 @@ struct io_wrapper<TevOrder>
 		c.rasOrder = static_cast<gx::ColorSelChanApi>(reader.read<u8>());
 		reader.read<u8>();
 	}
+	static void onWrite(oishii::v2::Writer& writer, const TevOrder& in)
+	{
+		writer.write<u8>(in.texCoord);
+		writer.write<u8>(in.texMap);
+		writer.write<u8>(static_cast<u8>(in.rasOrder));
+		writer.write<u8>(-1);
+	}
 };
 
 template<>
@@ -319,6 +435,7 @@ struct io_wrapper<gx::TevStage>
 	static void onRead(oishii::BinaryReader& reader, gx::TevStage& c)
 	{
 		const auto unk1 = reader.read<u8>();
+		printf("MatUnk1: %u\n", (u32)unk1);
 		c.colorStage.a = static_cast<gx::TevColorArg>(reader.read<u8>());
 		c.colorStage.b = static_cast<gx::TevColorArg>(reader.read<u8>());
 		c.colorStage.c = static_cast<gx::TevColorArg>(reader.read<u8>());
@@ -341,7 +458,12 @@ struct io_wrapper<gx::TevStage>
 		c.alphaStage.clamp = reader.read<u8>();
 		c.alphaStage.out = static_cast<gx::TevReg>(reader.read<u8>());
 
+		// TODO: Data loss
 		const auto unk2 = reader.read<u8>();
+	}
+	static void onWrite(oishii::v2::Writer& writer, const gx::ZMode& in)
+	{
+
 	}
 };
 
@@ -359,6 +481,19 @@ struct io_wrapper<MaterialData::Fog>
 		f.farZ = reader.read<f32>();
 		io_wrapper<gx::Color>::onRead(reader, f.color);
 		f.rangeAdjTable = reader.readX<u16, 10>();
+	}
+	static void onWrite(oishii::v2::Writer& writer, const MaterialData::Fog& in)
+	{
+		writer.write<u8>(static_cast<u8>(in.type));
+		writer.write<u8>(in.enabled);
+		writer.write<u16>(in.center);
+		writer.write<f32>(in.startZ);
+		writer.write<f32>(in.endZ);
+		writer.write<f32>(in.nearZ);
+		writer.write<f32>(in.farZ);
+		io_wrapper<gx::Color>::onWrite(writer, in.color);
+		for (const auto x : in.rangeAdjTable)
+			writer.write<u16>(x);
 	}
 };
 void readMatEntry(Material& mat, MatLoader& loader, oishii::BinaryReader& reader)
@@ -458,47 +593,46 @@ void readMatEntry(Material& mat, MatLoader& loader, oishii::BinaryReader& reader
 void readMAT3(BMDOutputContext& ctx)
 {
     auto& reader = ctx.reader;
-	if (enterSection(ctx, 'MAT3'))
+	if (!enterSection(ctx, 'MAT3')) return;
+	
+	ScopedSection g(reader, "Materials");
+
+	u16 size = reader.read<u16>();
+	ctx.mdl.mMaterials.resize(size);
+	ctx.materialIdLut.resize(size);
+	reader.read<u16>();
+
+	const auto [ofsMatData, ofsRemapTable, ofsStringTable] = reader.readX<s32, 3>();
+	MatLoader loader{ reader.readX<s32, static_cast<u32>(MatSec::Max)>(), g.start, reader };
+
+	reader.seekSet(g.start);
+
+	// FIXME: Generalize this code
+	reader.seekSet(g.start + ofsRemapTable);
+
+	bool sorted = true;
+	for (int i = 0; i < size; ++i)
 	{
-		ScopedSection g(reader, "Materials");
+		ctx.materialIdLut[i] = reader.read<u16>();
 
-		u16 size = reader.read<u16>();
-		ctx.mdl.mMaterials.resize(size);
-		ctx.materialIdLut.resize(size);
-		reader.read<u16>();
+		if (ctx.materialIdLut[i] != i)
+			sorted = false;
+	}
 
-		const auto [ofsMatData, ofsRemapTable, ofsStringTable] = reader.readX<s32, 3>();
-		MatLoader loader{ reader.readX<s32, static_cast<u32>(MatSec::Max)>(), g.start, reader };
+	if (!sorted)
+		DebugReport("Material IDS will be remapped on save and incompatible with animations.\n");
 
-		reader.seekSet(g.start);
+	reader.seekSet(ofsStringTable + g.start);
+	const auto nameTable = readNameTable(reader);
 
-		// FIXME: Generalize this code
-		reader.seekSet(g.start + ofsRemapTable);
+	for (int i = 0; i < size; ++i)
+	{
+		auto& mat = ctx.mdl.mMaterials[i];
+		reader.seekSet(g.start + ofsMatData + ctx.materialIdLut[i] * 0x14c);
+		mat.id = ctx.materialIdLut[i];
+		mat.name = nameTable[i];
 
-		bool sorted = true;
-		for (int i = 0; i < size; ++i)
-		{
-			ctx.materialIdLut[i] = reader.read<u16>();
-
-			if (ctx.materialIdLut[i] != i)
-				sorted = false;
-		}
-
-		if (!sorted)
-			DebugReport("Material IDS will be remapped on save and incompatible with animations.\n");
-
-		reader.seekSet(ofsStringTable + g.start);
-		const auto nameTable = readNameTable(reader);
-
-		for (int i = 0; i < size; ++i)
-		{
-			auto& mat = ctx.mdl.mMaterials[i];
-			reader.seekSet(g.start + ofsMatData + ctx.materialIdLut[i] * 0x14c);
-			mat.id = ctx.materialIdLut[i];
-			mat.name = nameTable[i];
-
-			readMatEntry(mat, loader, reader);
-		}
+		readMatEntry(mat, loader, reader);
 	}
 }
 

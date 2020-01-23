@@ -54,7 +54,7 @@ struct MaterialData
 		f32			rotate;
 		glm::vec2	translate;
 
-		glm::vec4	effectMatrix;
+		std::array<f32, 16>	effectMatrix;
 	};
 	struct NBTScale
 	{
