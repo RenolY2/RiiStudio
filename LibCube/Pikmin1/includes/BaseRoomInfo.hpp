@@ -9,14 +9,14 @@ namespace libcube { namespace pikmin1 {
 struct BaseRoomInfo
 {
 	constexpr static const char name[] = "Base Room Information";
-	u32 m_unk1;
+	u32 m_size;
 
 	BaseRoomInfo() = default;
 	~BaseRoomInfo() = default;
 
 	static void onRead(oishii::BinaryReader& bReader, BaseRoomInfo& context)
 	{
-		context.m_unk1 = bReader.readUnaligned<u32>();
+		context.m_size = bReader.readUnaligned<u32>();
 	}
 };
 
