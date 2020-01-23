@@ -105,7 +105,7 @@ bool BMDImporter::tryRead(oishii::BinaryReader& reader, pl::FileState& state)
 	BMDOutputContext ctx{ j3dc.mModel, reader };
 
 	// reader.add_bp<u32>(8);
-	// reader.add_bp(0x2d3a-16, 16+16);
+	// reader.add_bp(0x34b0, 16);
 
 	readBMD(reader, ctx);
 	return !error;
@@ -152,7 +152,7 @@ struct BMDFile : public oishii::v2::Node
 		addNode(makeEVP1Node(exp));
 		addNode(makeDRW1Node(exp));
 		addNode(makeJNT1Node(exp));
-		//	addNode(makeSHP1Node(exp));
+		addNode(makeSHP1Node(exp));
 		//	addNode(makeMAT3Node(exp));
 		//	addNode(makeTEX1Node(exp));
 		return {};
@@ -164,7 +164,7 @@ struct BMDFile : public oishii::v2::Node
 };
 void BMD_Pad(char* dst, u32 len)
 {
-	assert(len < 30);
+	//assert(len < 30);
 	memcpy(dst, "This is padding data to align.....", len);
 }
 void exportBMD(oishii::v2::Writer& writer, J3DCollection& collection)
