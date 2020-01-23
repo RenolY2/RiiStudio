@@ -77,6 +77,7 @@ void readSHP1(BMDOutputContext& ctx)
         auto first_matrix_list = reader.read<u16>();
         // "Packet" or mtx prim summary (accessor) idx
         auto first_mtx_prim_idx = reader.read<u16>();
+		assert(first_mtx_prim_idx == si);
         reader.read<u16>();
         shape.bsphere = reader.read<f32>();
         shape.bbox << reader;
@@ -179,6 +180,378 @@ void readSHP1(BMDOutputContext& ctx)
             }
         }
     }
+}
+
+
+static void operator>>(const glm::vec3& vec, oishii::v2::Writer& writer)
+{
+	writer.write(vec.x);
+	writer.write(vec.y);
+	writer.write(vec.z);
+}
+
+struct SHP1Node final : public oishii::v2::Node
+{
+	SHP1Node(const J3DModel& model)
+		: mModel(model)
+	{
+		mId = "SHP1";
+		mLinkingRestriction.alignment = 32;
+	}
+	Result write(oishii::v2::Writer& writer) const noexcept override
+	{
+		writer.write<u32, oishii::EndianSelect::Big>('SHP1');
+		writer.writeLink<s32>({ *this }, { *this, oishii::v2::Hook::EndOfChildren });
+
+		writer.write<u16>(mModel.mShapes.size());
+		writer.write<u16>(-1);
+
+		writer.writeLink<u32>({ *this }, { "ShapeData" });
+		writer.writeLink<u32>({ *this }, { "LUT" });
+		writer.write<u32>(0); // writer.writeLink<u32>({ *this }, { "NameTable" });
+		writer.writeLink<u32>({ *this }, { "VCDList" });
+		writer.writeLink<u32>({ *this }, { "MTXList" });
+		writer.writeLink<u32>({ *this }, { "DLData" });
+		writer.writeLink<u32>({ *this }, { "MTXData" });
+		writer.writeLink<u32>({ *this }, { "MTXGrpHdr" });
+		// Shape Data
+		// Remap table
+		// Unused Name table
+		// String
+		// VCD List
+		// DRW Table
+		// DL data
+		// MTX data
+		// MTX Prim hdrs
+		return {};
+	}
+	enum class SubNodeID
+	{
+		ShapeData,
+		LUT,
+		NameTable,
+		VCDList,
+		MTXList,
+		DLData,
+		MTXData,
+		MTXGrpHdr,
+		Max,
+
+		_VCDChild = Max,
+		_DLChild,
+		_MTXChild,
+		_MTXGrpChild,
+		_DLChildMPrim,
+		_MTXDataChild,
+		_MTXListChild,
+		_MTXListChildMPrim
+	};
+	struct SubNode : public oishii::v2::Node
+	{
+		SubNode(const J3DModel& mdl, SubNodeID id, int polyId=-1, int MPrimId = -1)
+			: mMdl(mdl), mSID(id), mPolyId(polyId), mMpId(MPrimId)
+		{
+			u32 align = 4;
+			bool leaf = true;
+			switch (id)
+			{
+			case SubNodeID::ShapeData:
+				mId = "ShapeData";
+				align = 4;
+				break;
+			case SubNodeID::LUT:
+				mId = "LUT";
+				align = 2;
+				break;
+			case SubNodeID::NameTable:
+				mId = "NameTable";
+				break;
+			case SubNodeID::VCDList:
+				mId = "VCDList";
+				align = 16;
+				leaf = false;
+				break;
+			case SubNodeID::MTXList:
+				mId = "MTXList";
+				align = 4;
+				leaf = false;
+				break;
+			case SubNodeID::DLData:
+				mId = "DLData";
+				align = 32;
+				leaf = false;
+				break;
+			case SubNodeID::MTXData:
+				mId = "MTXData";
+				align = 4;
+				leaf = false;
+				break;
+			case SubNodeID::MTXGrpHdr:
+				mId = "MTXGrpHdr";
+				align = 2;
+				leaf = false;
+				break;
+			case SubNodeID::_VCDChild:
+				mId = std::to_string(mPolyId);
+				align = 16;
+				leaf = true;
+				break;
+			case SubNodeID::_DLChild:
+				mId = std::to_string(mPolyId);
+				align = 32;
+				leaf = false;
+				break;
+			case SubNodeID::_MTXChild:
+				mId = std::to_string(mPolyId);
+				align = 4;
+				leaf = true;
+				break;
+			case SubNodeID::_MTXGrpChild:
+				mId = std::to_string(mPolyId);
+				align = 4;
+				leaf = true;
+				break;
+			case SubNodeID::_DLChildMPrim:
+				mId = std::to_string(MPrimId);
+				align = 32;
+				leaf = true;
+				break;
+			case SubNodeID::_MTXDataChild:
+				mId = std::to_string(mPolyId);
+				align = 4;
+				leaf = true;
+				break;
+
+			case SubNodeID::_MTXListChild:
+				mId = std::to_string(mPolyId);
+				align = 4;
+				leaf = false;
+				break;
+			case SubNodeID::_MTXListChildMPrim:
+				mId = std::to_string(MPrimId);
+				align = 2;
+				leaf = true;
+				break;
+			}
+			if (leaf)
+				getLinkingRestriction().setLeaf();
+			getLinkingRestriction().alignment = align;
+		}
+
+		Result write(oishii::v2::Writer& writer) const noexcept
+		{
+			switch (mSID)
+			{
+			case SubNodeID::ShapeData:
+			{
+				int i = 0;
+				for (const auto& shp : mMdl.mShapes)
+				{
+					writer.write<u8>(static_cast<u8>(shp.mode));
+					writer.write<u8>(0xff);
+					writer.write<u16>(shp.mMatrixPrimitives.size());
+					writer.writeLink<u16>({ "SHP1::VCDList" }, { std::string("SHP1::VCDList::") + std::to_string(i) }); // offset into VCD list
+					// TODO -- we don't support compression..
+					writer.write<u16>(i); // Matrix list index of this prim
+					int mpi = 0;
+					for (int j = 0; j < i; ++j)
+					{
+						mpi += mMdl.mShapes[j].mMatrixPrimitives.size();
+					}
+					writer.write<u16>(mpi); // Matrix primitive index
+					writer.write<u16>(0xffff);
+					writer.write<f32>(shp.bsphere);
+					shp.bbox.m_minBounds >> writer;
+					shp.bbox.m_maxBounds >> writer;
+
+					++i;
+				}
+
+				break;
+			}
+			case SubNodeID::LUT:
+				// TODO...
+				for (int i = 0; i < mMdl.mShapes.size(); ++i)
+					writer.write<u16>(i);
+				break;
+			case SubNodeID::NameTable:
+				break; // Always zero
+			case SubNodeID::VCDList:
+				break; // Children do the writing.
+			case SubNodeID::_VCDChild:
+				for (auto& x : mMdl.mShapes[mPolyId].mVertexDescriptor.mAttributes)
+				{
+					writer.write<gx::VertexAttribute>(x.first);
+					writer.write<gx::VertexAttributeType>(x.second);
+				}
+				writer.write<u32>(static_cast<u32>(gx::VertexAttribute::Terminate));
+				writer.write<u32>(0);
+				break;
+			case SubNodeID::MTXList:
+			case SubNodeID::_MTXListChild:
+				break; // Children write
+			
+			case SubNodeID::_MTXListChildMPrim:
+				for (auto& x : mMdl.mShapes[mPolyId].mMatrixPrimitives[mMpId].mDrawMatrixIndices)
+					// TODO: Move -1 to here..
+					writer.write<u16>(x);
+				break;
+			case SubNodeID::DLData:
+				break; // Children write
+			case SubNodeID::_DLChild:
+				break; // MPrims write..
+			case SubNodeID::_DLChildMPrim:
+			{
+				for (auto& prim : mMdl.mShapes[mPolyId].mMatrixPrimitives[mMpId].mPrimitives)
+				{
+					writer.write<u8>(gx::EncodeDrawPrimitiveCommand(prim.mType));
+					writer.write<u16>(prim.mVertices.size());
+					for (const auto& v : prim.mVertices)
+					{
+						for (int a = 0; a < (int)gx::VertexAttribute::Max; ++a)
+						{
+							if (mMdl.mShapes[mPolyId].mVertexDescriptor[(gx::VertexAttribute)a])
+							{
+								switch (mMdl.mShapes[mPolyId].mVertexDescriptor.mAttributes.at((gx::VertexAttribute)a))
+								{
+								case gx::VertexAttributeType::None:
+									break;
+								case gx::VertexAttributeType::Byte:
+									writer.write<u8>(v[(gx::VertexAttribute)a]);
+									break;
+								case gx::VertexAttributeType::Short:
+									writer.write<u16>(v[(gx::VertexAttribute)a]);
+									break;
+								case gx::VertexAttributeType::Direct:
+									if (((gx::VertexAttribute)a) != gx::VertexAttribute::PositionNormalMatrixIndex)
+									{
+										assert(!"Direct vertex data is unsupported.");
+										throw "";
+									}
+									writer.write<u8>(v[(gx::VertexAttribute)a]);
+									break;
+								default:
+									assert("!Unknown vertex attribute format.");
+									throw "";
+								}
+							}
+						}
+					}
+				}
+				// DL pad
+				while (writer.tell() % 32)
+					writer.write<u8>(0);
+				break;
+			}
+			case SubNodeID::MTXData:
+				break; // Children write
+			case SubNodeID::_MTXDataChild:
+			{
+				int i = 0;
+				for (const auto& x : mMdl.mShapes[mPolyId].mMatrixPrimitives)
+				{
+					writer.write<u16>(x.mCurrentMatrix);
+					// listSize, listStartIndex
+					writer.write<u16>(x.mDrawMatrixIndices.size());
+					writer.writeLink<u32>({
+						{"SHP1::MTXList"},
+						{std::string("SHP1::MTXList::") + std::to_string(mPolyId) + "::" + std::to_string(i) },
+						2 });
+					++i;
+				}
+				break;
+			}
+			case SubNodeID::MTXGrpHdr:
+				break; // Children write
+			case SubNodeID::_MTXGrpChild:
+				for (int i = 0; i < mMdl.mShapes[mPolyId].mMatrixPrimitives.size(); ++i)
+				{
+					std::string front = std::string("SHP1::DLData::") + std::to_string(mPolyId) + "::";
+					// DL size
+					writer.writeLink<u32>(
+						{ front + std::to_string(i) },
+						{ front + std::to_string(i), oishii::v2::Hook::RelativePosition::End });
+					// Relative DL offset
+					writer.writeLink<u32>(
+						{ "SHP1::DLData" },
+						{ front + std::to_string(i) });
+				}
+				break;
+			}
+			return {};
+		}
+
+		Result gatherChildren(NodeDelegate& d) const noexcept override
+		{
+			switch (mSID)
+			{
+			case SubNodeID::ShapeData:
+			case SubNodeID::LUT:
+			case SubNodeID::NameTable:
+			case SubNodeID::_VCDChild:
+			case SubNodeID::_MTXChild:
+			case SubNodeID::_MTXGrpChild:
+			case SubNodeID::_MTXDataChild:
+				break;
+			case SubNodeID::VCDList:
+				for (int i = 0; i < mMdl.mShapes.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_VCDChild, i));
+				break;
+			case SubNodeID::MTXList:
+				for (int i = 0; i < mMdl.mShapes.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXListChild, i));
+				break;
+			case SubNodeID::DLData:
+				for (int i = 0; i < mMdl.mShapes.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_DLChild, i));
+				break;
+			case SubNodeID::MTXData:
+				for (int i = 0; i < mMdl.mShapes.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXDataChild, i));
+				break;
+			case SubNodeID::MTXGrpHdr:
+				for (int i = 0; i < mMdl.mShapes.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXGrpChild, i));
+				break;
+			case SubNodeID::_DLChild:
+				for (int i = 0; i < mMdl.mShapes[mPolyId].mMatrixPrimitives.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_DLChildMPrim, mPolyId, i));
+				break;
+			case SubNodeID::_MTXListChild:
+				for (int i = 0; i < mMdl.mShapes[mPolyId].mMatrixPrimitives.size(); ++i)
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXListChildMPrim, mPolyId, i));
+				break;
+
+			}
+
+			return eResult::Success;
+		}
+
+		const J3DModel& mMdl;
+		const SubNodeID mSID;
+		int mPolyId = -1;
+		int mMpId = -1;
+	};
+
+	Result gatherChildren(NodeDelegate& d) const noexcept override
+	{
+		auto addSubNode = [&](SubNodeID ID)
+		{
+			d.addNode(std::make_unique<SubNode>(mModel, ID));
+		};
+
+		for (int i = 0; i < static_cast<int>(SubNodeID::Max); ++i)
+			addSubNode(static_cast<SubNodeID>(i));
+
+		return {};
+	}
+	const J3DModel& mModel;
+};
+
+
+std::unique_ptr<oishii::v2::Node> makeSHP1Node(BMDExportContext& ctx)
+{
+	return std::make_unique<SHP1Node>(ctx.mdl);
 }
 
 }
