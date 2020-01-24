@@ -88,6 +88,22 @@ void BMDImporter::readBMD(oishii::BinaryReader& reader, BMDOutputContext& ctx)
 	// Read shapes
 	readSHP1(ctx);
 
+	for (const auto& e : ctx.mVertexBufferMaxIndices)
+	{
+		switch (e.first)
+		{
+		case gx::VertexBufferAttribute::Position:
+			if (ctx.mdl.mBufs.pos.mData.size() != e.second + 1)
+			{
+				printf("The position vertex buffer currently has %u greedily-claimed entries due to 32B padding; %u are used.\n", ctx.mdl.mBufs.pos.mData.size(), e.second + 1);
+				ctx.mdl.mBufs.pos.mData.resize(e.second + 1);
+			}
+			break;
+		default:
+			break; // TODO
+		}
+	}
+
 	// Read TEX1
 
 	// Read materials

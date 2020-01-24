@@ -1,4 +1,5 @@
 #include <LibCube/JSystem/J3D/Binary/BMD/Sections.hpp>
+#include <LibCube/Common/DisplayList.hpp>
 
 namespace libcube::jsystem {
 
@@ -135,66 +136,21 @@ void readSHP1(BMDOutputContext& ctx)
             MatrixData mtxPrimHdr = readMatrixData();
             MatrixPrimitive& mprim = shape.mMatrixPrimitives.emplace_back(mtxPrimHdr.current_matrix, mtxPrimHdr.matrixList);
             
-            // Now read prim data..
-            // (Stripped down display list interpreter function)
-            
-            reader.seekSet(g.start + ofsDL + dlOfs);
-            while (reader.tell() < g.start + ofsDL + dlOfs + dlSz)
-            {
-                const u8 tag = reader.read<u8, oishii::EndianSelect::Current, true>();
-                if (tag == 0) break;
-                assert(tag & 0x80 && "Unexpected GPU command in display list.");
-                const gx::PrimitiveType type = gx::DecodeDrawPrimitiveCommand(tag);
-                u16 nVerts = reader.read<u16, oishii::EndianSelect::Current, true>();
-                IndexedPrimitive& prim = mprim.mPrimitives.emplace_back(type, nVerts);
-
-                for (u16 vi = 0; vi < nVerts; ++vi)
-                {
-                    for (int a = 0; a < (int)gx::VertexAttribute::Max; ++a)
-                    {
-                        if (shape.mVertexDescriptor[(gx::VertexAttribute)a])
-                        {
-                            u16 val = 0;
-
-                            switch (shape.mVertexDescriptor.mAttributes[(gx::VertexAttribute)a])
-                            {
-                            case gx::VertexAttributeType::None:
-                                break;
-                            case gx::VertexAttributeType::Byte:
-                                val = reader.read<u8, oishii::EndianSelect::Current, true>();
-                                break;
-                            case gx::VertexAttributeType::Short:
-                                val = reader.read<u16, oishii::EndianSelect::Current, true>();
-                                break;
-                            case gx::VertexAttributeType::Direct:
-                                if (((gx::VertexAttribute)a) != gx::VertexAttribute::PositionNormalMatrixIndex)
-                                {
-                                    assert(!"Direct vertex data is unsupported.");
-                                    throw "";
-                                }
-                                val = reader.read<u8, oishii::EndianSelect::Current, true>(); // As PNM indices are always direct, we still use them in an all-indexed vertex
-                                break;
-                            default:
-                                assert("!Unknown vertex attribute format.");
-                                throw "";
-                            }
-
-                            prim.mVertices[vi][(gx::VertexAttribute)a] = val;
-                        }
-                    }
-                }
-            }
+			struct SHP1_MPrim : IMeshDLDelegate
+			{
+				IndexedPrimitive& addIndexedPrimitive(gx::PrimitiveType type, u16 nVerts) override
+				{
+					return mprim.mPrimitives.emplace_back(type, nVerts);
+				}
+				SHP1_MPrim(MatrixPrimitive& mp) : mprim(mp) { }
+			private:
+				MatrixPrimitive& mprim;
+			} mprim_del(mprim);
+			DecodeMeshDisplayList(reader, g.start + ofsDL + dlOfs, dlSz, mprim_del, shape.mVertexDescriptor, &ctx.mVertexBufferMaxIndices);
         }
     }
 }
 
-
-static void operator>>(const glm::vec3& vec, oishii::v2::Writer& writer)
-{
-	writer.write(vec.x);
-	writer.write(vec.y);
-	writer.write(vec.z);
-}
 
 struct SHP1Node final : public oishii::v2::Node
 {
