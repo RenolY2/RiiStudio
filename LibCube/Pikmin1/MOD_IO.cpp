@@ -1,4 +1,5 @@
 #include "MOD_IO.hpp"
+#include <util/TextureExport.hpp>
 
 namespace libcube {
 	namespace pikmin1 {
@@ -167,6 +168,15 @@ namespace libcube {
 
 			DebugReport("Done reading file\n");
 
+#ifdef _DEBUG
+			DebugReport("Dumping texture files!\n");
+			u32 i = 0;
+			for (const auto& texture : mdl.mTextures)
+			{
+				std::string name = "texture" + std::to_string(i) + ".png";
+				writeImageStbRGBA(name.c_str(), STBImage::PNG, texture.m_width, texture.m_height, texture.m_convImageData.data());
+			}
+#endif
 			return true;
 		}
 	}

@@ -62,6 +62,8 @@ void TXE::importMODTXE(oishii::BinaryReader& bReader)
 
 	for (auto& pixelData : m_txeImageData)
 		pixelData = bReader.read<u8>();
+
+	decode();
 }
 
 inline DecodingTextureFormat TXE::getDTF() const
