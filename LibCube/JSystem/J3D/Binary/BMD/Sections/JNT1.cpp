@@ -68,13 +68,6 @@ void readJNT1(BMDOutputContext& ctx)
     }
 }
 
-static void operator>>(const glm::vec3& vec, oishii::v2::Writer& writer)
-{
-	writer.write(vec.x);
-	writer.write(vec.y);
-	writer.write(vec.z);
-}
-
 struct JNT1Node final : public oishii::v2::Node
 {
 	JNT1Node(const J3DModel& model)

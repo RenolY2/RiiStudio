@@ -20,6 +20,9 @@ struct BMDOutputContext
     std::vector<u16> materialIdLut;
     std::vector<u16> shapeIdLut;
 
+	// For VTX1 trimming (length isn't stored)
+	std::map<gx::VertexBufferAttribute, u32> mVertexBufferMaxIndices; // Attr : Max Idx
+
     
 	// Associate section magics with file positions and size
 	struct SectionEntry
