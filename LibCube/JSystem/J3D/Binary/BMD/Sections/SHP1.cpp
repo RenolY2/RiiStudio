@@ -151,7 +151,121 @@ void readSHP1(BMDOutputContext& ctx)
     }
 }
 
+template<typename T, u32 bodyAlign=1, u32 entryAlign=1, bool compress=true>
+class CompressableVector : public oishii::v2::Node
+{
+	struct Child : public oishii::v2::Node
+	{
+		Child(const CompressableVector& parent, u32 index)
+			: mParent(parent), mIndex(index)
+		{
+			mId = std::to_string(index);
+			getLinkingRestriction().alignment = entryAlign;
+			//getLinkingRestriction().setFlag(oishii::v2::LinkingRestriction::PadEnd);
+			getLinkingRestriction().setLeaf();
+		}
+		Result write(oishii::v2::Writer& writer) const noexcept override
+		{
+			mParent.getEntry(mIndex).write(writer);
+			return {};
+		}
+		const CompressableVector& mParent;
+		const u32 mIndex;
+	};
+	struct ContainerNode : public oishii::v2::Node
+	{
+		ContainerNode(const CompressableVector& parent, const std::string& id)
+			: mParent(parent)
+		{
+			mId = id;
+			getLinkingRestriction().alignment = bodyAlign;
+		}
+		Result gatherChildren(NodeDelegate& d) const noexcept override
+		{
+			for (u32 i = 0; i < mParent.getNumEntries(); ++i)
+				d.addNode(std::make_unique<Child>(mParent, i));
+			return {};
+		}
+		const CompressableVector& mParent;
+	};
+public:
 
+	std::unique_ptr<oishii::v2::Node> spawnNode(const std::string& id) const
+	{
+		return std::make_unique<ContainerNode>(*this, id);
+	}
+
+	u32 append(const T& entry)
+	{
+		const auto found = std::find(mEntries.begin(), mEntries.end(), entry);
+		if (found == mEntries.end() || !compress)
+		{
+			mEntries.push_back(entry);
+			return mEntries.size() - 1;
+		}
+		return found - mEntries.begin();
+	}
+	int find(const T& entry) const
+	{
+		int outIdx = -1;
+		for (int i = 0; i < mEntries.size(); ++i)
+			if (entry == mEntries[i])
+				outIdx = i;
+		// Intentionally complete
+		// TODO: rfind
+		return outIdx;
+
+	}
+	u32 getNumEntries() const
+	{
+		return mEntries.size();
+	}
+	const T& getEntry(u32 idx) const
+	{
+		assert(idx < mEntries.size());
+		return mEntries[idx];
+	}
+	T& getEntry(u32 idx)
+	{
+		assert(idx < mEntries.size());
+		return mEntries[idx];
+	}
+
+protected:
+	std::vector<T> mEntries;
+};
+struct WriteableVertexDescriptor : VertexDescriptor
+{
+	WriteableVertexDescriptor(const VertexDescriptor& d)
+	{
+		*(VertexDescriptor*)this = d;
+	}
+	void write(oishii::v2::Writer& writer) const noexcept
+	{
+		for (auto& x : mAttributes)
+		{
+			writer.write<u32>(static_cast<u32>(x.first));
+			writer.write<u32>(static_cast<u32>(x.second));
+		}
+		writer.write<u32>(static_cast<u32>(gx::VertexAttribute::Terminate));
+		writer.write<u32>(0);
+	}
+};
+struct WriteableMatrixList : public std::vector<s16>
+{
+	WriteableMatrixList(const std::vector<s16>& parent)
+	{
+		*(std::vector<s16>*)this = parent;
+	}
+	void write(oishii::v2::Writer& writer) const noexcept
+	{
+		for (int i = 0; i < size(); ++i)
+			writer.write<u16>(at(i));
+
+		//	while (writer.tell() % 32)
+		//		writer.write<u8>(0);
+	}
+};
 struct SHP1Node final : public oishii::v2::Node
 {
 	SHP1Node(const J3DModel& model)
@@ -159,9 +273,34 @@ struct SHP1Node final : public oishii::v2::Node
 	{
 		mId = "SHP1";
 		mLinkingRestriction.alignment = 32;
+
+		for (const auto& shp : mModel.mShapes)
+		{
+			mVcdPool.append(shp.mVertexDescriptor);
+			for (const auto& mp : shp.mMatrixPrimitives)
+				mMtxListPool.append(mp.mDrawMatrixIndices);
+		}
 	}
+
+	CompressableVector<WriteableVertexDescriptor, 32, 16> mVcdPool;
+	CompressableVector<WriteableMatrixList,
+#ifdef ALIGN_MTX_CHILDS
+		32, 32,
+#else
+		0, 2,
+#endif
+		false> mMtxListPool;
 	Result write(oishii::v2::Writer& writer) const noexcept override
 	{
+		// VCD List compression compute.
+		//	struct VCDHasher
+		//	{
+		//		std::size_t operator()(const VertexDescriptor& v) const { return v.mBitfield; }
+		//	};
+		//	std::map<VertexDescriptor, int, VCDHasher> vcd;
+		//	for (auto& shp : mModel.mShapes)
+		//		vcd[shp.mVertexDescriptor] = 0;
+
 		writer.write<u32, oishii::EndianSelect::Big>('SHP1');
 		writer.writeLink<s32>({ *this }, { *this, oishii::v2::Hook::EndOfChildren });
 
@@ -210,8 +349,9 @@ struct SHP1Node final : public oishii::v2::Node
 	};
 	struct SubNode : public oishii::v2::Node
 	{
-		SubNode(const J3DModel& mdl, SubNodeID id, int polyId=-1, int MPrimId = -1)
-			: mMdl(mdl), mSID(id), mPolyId(polyId), mMpId(MPrimId)
+		const SHP1Node& mParent;
+		SubNode(const J3DModel& mdl, SubNodeID id, const SHP1Node& parent,int polyId=-1, int MPrimId = -1)
+			: mMdl(mdl), mSID(id), mPolyId(polyId), mMpId(MPrimId), mParent(parent)
 		{
 			u32 align = 4;
 			bool leaf = true;
@@ -223,20 +363,11 @@ struct SHP1Node final : public oishii::v2::Node
 				break;
 			case SubNodeID::LUT:
 				mId = "LUT";
-				align = 2;
+				align = 4;
+				getLinkingRestriction().setFlag(oishii::v2::LinkingRestriction::PadEnd);
 				break;
 			case SubNodeID::NameTable:
 				mId = "NameTable";
-				break;
-			case SubNodeID::VCDList:
-				mId = "VCDList";
-				align = 16;
-				leaf = false;
-				break;
-			case SubNodeID::MTXList:
-				mId = "MTXList";
-				align = 4;
-				leaf = false;
 				break;
 			case SubNodeID::DLData:
 				mId = "DLData";
@@ -248,15 +379,16 @@ struct SHP1Node final : public oishii::v2::Node
 				align = 4;
 				leaf = false;
 				break;
+
+			case SubNodeID::_MTXDataChild:
+				mId = std::to_string(mPolyId);
+				align = 4;
+				leaf = true;
+				break;
 			case SubNodeID::MTXGrpHdr:
 				mId = "MTXGrpHdr";
 				align = 2;
 				leaf = false;
-				break;
-			case SubNodeID::_VCDChild:
-				mId = std::to_string(mPolyId);
-				align = 16;
-				leaf = true;
 				break;
 			case SubNodeID::_DLChild:
 				mId = std::to_string(mPolyId);
@@ -278,22 +410,6 @@ struct SHP1Node final : public oishii::v2::Node
 				align = 32;
 				leaf = true;
 				break;
-			case SubNodeID::_MTXDataChild:
-				mId = std::to_string(mPolyId);
-				align = 4;
-				leaf = true;
-				break;
-
-			case SubNodeID::_MTXListChild:
-				mId = std::to_string(mPolyId);
-				align = 4;
-				leaf = false;
-				break;
-			case SubNodeID::_MTXListChildMPrim:
-				mId = std::to_string(MPrimId);
-				align = 2;
-				leaf = true;
-				break;
 			}
 			if (leaf)
 				getLinkingRestriction().setLeaf();
@@ -312,7 +428,8 @@ struct SHP1Node final : public oishii::v2::Node
 					writer.write<u8>(static_cast<u8>(shp.mode));
 					writer.write<u8>(0xff);
 					writer.write<u16>(shp.mMatrixPrimitives.size());
-					writer.writeLink<u16>({ "SHP1::VCDList" }, { std::string("SHP1::VCDList::") + std::to_string(i) }); // offset into VCD list
+					int vcd = mParent.mVcdPool.find(shp.mVertexDescriptor);
+					writer.writeLink<u16>({ "SHP1::VCDList" }, { std::string("SHP1::VCDList::") + std::to_string(vcd) }); // offset into VCD list
 					// TODO -- we don't support compression..
 					int mpi = 0;
 					for (int j = 0; j < i; ++j)
@@ -341,23 +458,18 @@ struct SHP1Node final : public oishii::v2::Node
 			case SubNodeID::VCDList:
 				break; // Children do the writing.
 			case SubNodeID::_VCDChild:
-				for (auto& x : mMdl.mShapes[mPolyId].mVertexDescriptor.mAttributes)
-				{
-					writer.write<gx::VertexAttribute>(x.first);
-					writer.write<gx::VertexAttributeType>(x.second);
-				}
-				writer.write<u32>(static_cast<u32>(gx::VertexAttribute::Terminate));
-				writer.write<u32>(0);
+				// TODO
 				break;
 			case SubNodeID::MTXList:
-			case SubNodeID::_MTXListChild:
 				break; // Children write
-			
-			case SubNodeID::_MTXListChildMPrim:
-				for (auto& x : mMdl.mShapes[mPolyId].mMatrixPrimitives[mMpId].mDrawMatrixIndices)
+
+			case SubNodeID::_MTXListChild:
+			{
+				for (auto x : mtxListPool->at(mPolyId))
 					// TODO: Move -1 to here..
 					writer.write<u16>(x);
 				break;
+			}
 			case SubNodeID::DLData:
 				break; // Children write
 			case SubNodeID::_DLChild:
@@ -409,16 +521,28 @@ struct SHP1Node final : public oishii::v2::Node
 				break; // Children write
 			case SubNodeID::_MTXDataChild:
 			{
+
+				u32 num = 0;
+				for (int j = 0; j < mPolyId; ++j)
+					for (auto& mp : mMdl.mShapes[j].mMatrixPrimitives)
+						num += mp.mDrawMatrixIndices.size();
 				int i = 0;
 				for (const auto& x : mMdl.mShapes[mPolyId].mMatrixPrimitives)
 				{
 					writer.write<u16>(x.mCurrentMatrix);
 					// listSize, listStartIndex
 					writer.write<u16>(x.mDrawMatrixIndices.size());
-					writer.writeLink<u32>({
-						{"SHP1::MTXList"},
-						{std::string("SHP1::MTXList::") + std::to_string(mPolyId) + "::" + std::to_string(i) },
-						2 });
+					
+					{
+						//	u32 mpId = mParent.mMtxListPool.find({ x.mDrawMatrixIndices });
+						//	writer.writeLink<u32>({
+						//		{"SHP1::MTXList"},
+						//		{std::string("SHP1::MTXList::") + std::to_string(mpId)  },
+						//		2 });
+						// Never compressed...
+						writer.write<u32>(num);
+						num += x.mDrawMatrixIndices.size();
+					}
 					++i;
 				}
 				break;
@@ -455,33 +579,21 @@ struct SHP1Node final : public oishii::v2::Node
 			case SubNodeID::_MTXGrpChild:
 			case SubNodeID::_MTXDataChild:
 				break;
-			case SubNodeID::VCDList:
-				for (int i = 0; i < mMdl.mShapes.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_VCDChild, i));
-				break;
-			case SubNodeID::MTXList:
-				for (int i = 0; i < mMdl.mShapes.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXListChild, i));
-				break;
 			case SubNodeID::DLData:
 				for (int i = 0; i < mMdl.mShapes.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_DLChild, i));
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_DLChild, mParent, i));
 				break;
 			case SubNodeID::MTXData:
 				for (int i = 0; i < mMdl.mShapes.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXDataChild, i));
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXDataChild, mParent, i));
 				break;
 			case SubNodeID::MTXGrpHdr:
 				for (int i = 0; i < mMdl.mShapes.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXGrpChild, i));
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXGrpChild, mParent, i));
 				break;
 			case SubNodeID::_DLChild:
 				for (int i = 0; i < mMdl.mShapes[mPolyId].mMatrixPrimitives.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_DLChildMPrim, mPolyId, i));
-				break;
-			case SubNodeID::_MTXListChild:
-				for (int i = 0; i < mMdl.mShapes[mPolyId].mMatrixPrimitives.size(); ++i)
-					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_MTXListChildMPrim, mPolyId, i));
+					d.addNode(std::make_unique<SubNode>(mMdl, SubNodeID::_DLChildMPrim, mParent, mPolyId, i));
 				break;
 
 			}
@@ -493,18 +605,25 @@ struct SHP1Node final : public oishii::v2::Node
 		const SubNodeID mSID;
 		int mPolyId = -1;
 		int mMpId = -1;
+
+		const std::vector<VertexDescriptor>* vcdPool;
+		const std::vector<std::vector<s16>>* mtxListPool;
 	};
 
 	Result gatherChildren(NodeDelegate& d) const noexcept override
 	{
 		auto addSubNode = [&](SubNodeID ID)
 		{
-			d.addNode(std::make_unique<SubNode>(mModel, ID));
+			d.addNode(std::make_unique<SubNode>(mModel, ID, *this, -1, -1));
 		};
 
-		for (int i = 0; i < static_cast<int>(SubNodeID::Max); ++i)
-			addSubNode(static_cast<SubNodeID>(i));
-
+		addSubNode(SubNodeID::ShapeData);
+		addSubNode(SubNodeID::LUT);
+		d.addNode(mVcdPool.spawnNode("VCDList"));
+		d.addNode(mMtxListPool.spawnNode("MTXList"));
+		addSubNode(SubNodeID::DLData);
+		addSubNode(SubNodeID::MTXData);
+		addSubNode(SubNodeID::MTXGrpHdr);
 		return {};
 	}
 	const J3DModel& mModel;

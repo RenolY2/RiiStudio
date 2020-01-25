@@ -435,7 +435,7 @@ struct io_wrapper<gx::TevStage>
 	static void onRead(oishii::BinaryReader& reader, gx::TevStage& c)
 	{
 		const auto unk1 = reader.read<u8>();
-		printf("MatUnk1: %u\n", (u32)unk1);
+		assert(unk1 == 0xff);
 		c.colorStage.a = static_cast<gx::TevColorArg>(reader.read<u8>());
 		c.colorStage.b = static_cast<gx::TevColorArg>(reader.read<u8>());
 		c.colorStage.c = static_cast<gx::TevColorArg>(reader.read<u8>());
@@ -458,12 +458,34 @@ struct io_wrapper<gx::TevStage>
 		c.alphaStage.clamp = reader.read<u8>();
 		c.alphaStage.out = static_cast<gx::TevReg>(reader.read<u8>());
 
-		// TODO: Data loss
 		const auto unk2 = reader.read<u8>();
+		assert(unk2 == 0xff);
 	}
-	static void onWrite(oishii::v2::Writer& writer, const gx::ZMode& in)
+	static void onWrite(oishii::v2::Writer& writer, const gx::TevStage& in)
 	{
+		writer.write<u8>(0xff);
+		writer.write<u8>(static_cast<u8>(in.colorStage.a));
+		writer.write<u8>(static_cast<u8>(in.colorStage.b));
+		writer.write<u8>(static_cast<u8>(in.colorStage.c));
+		writer.write<u8>(static_cast<u8>(in.colorStage.d));
 
+		writer.write<u8>(static_cast<u8>(in.colorStage.formula));
+		writer.write<u8>(static_cast<u8>(in.colorStage.bias));
+		writer.write<u8>(static_cast<u8>(in.colorStage.scale));
+		writer.write<u8>(static_cast<u8>(in.colorStage.clamp));
+		writer.write<u8>(static_cast<u8>(in.colorStage.out));
+
+		writer.write<u8>(static_cast<u8>(in.alphaStage.a));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.b));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.c));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.d));
+
+		writer.write<u8>(static_cast<u8>(in.alphaStage.formula));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.bias));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.scale));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.clamp));
+		writer.write<u8>(static_cast<u8>(in.alphaStage.out));
+		writer.write<u8>(0xff);
 	}
 };
 
