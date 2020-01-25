@@ -9,7 +9,7 @@ struct Batch
 {
 	constexpr static const char name[] = "Batch";
 
-	u32 m_embossBump = 0;
+	u32 m_jointIndex = 0;
 	u32 m_depMTXGroups = 0;
 	int m_vcd;
 
@@ -21,7 +21,7 @@ struct Batch
 	static void onRead(oishii::BinaryReader& bReader, Batch& context)
 	{
 		// Read the batch variables
-		context.m_embossBump = bReader.read<u32>(); // whether mesh is using emboss NBT or not
+		context.m_jointIndex = bReader.read<u32>();
 		context.m_vcd = bReader.read<u32>();
 
 		context.m_mtxGroups.resize(bReader.read<u32>());
