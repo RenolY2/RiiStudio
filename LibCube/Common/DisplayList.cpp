@@ -1,5 +1,3 @@
-#pragma once
-
 #include <LibCube/Common/DisplayList.hpp>
 
 namespace libcube {

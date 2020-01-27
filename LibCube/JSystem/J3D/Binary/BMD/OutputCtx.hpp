@@ -79,7 +79,7 @@ inline u16 hash(const std::string& str)
 inline void writeNameTable(oishii::v2::Writer& writer, const std::vector<std::string>& names)
 {
 	u32 start = writer.tell();
-	writer.write<u16>(names.size());
+	writer.write<u16>(static_cast<u16>(names.size()));
 	writer.write<u16>(0xffff);
 
 	writer.seek<oishii::Whence::Current>(names.size() * 4);
@@ -123,8 +123,8 @@ struct ScopedSection : private oishii::BinaryReader::ScopedRegion
 		reader.seek(4);
 		size = reader.read<u32>();
 	}
-	u32 start;
-	u32 size;
+	u32 start = 0;
+	u32 size = 0;
 };
 
 template<typename T, bool leaf=false>
@@ -158,6 +158,10 @@ struct LinkNode final : public oishii::v2::Node, public T
 struct BMDExportContext
 {
 	J3DModel& mdl;
+
+	/*
+	We need to associate Samplers and TexData
+	*/
 };
 
 }
