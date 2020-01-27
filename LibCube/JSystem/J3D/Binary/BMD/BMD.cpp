@@ -161,16 +161,17 @@ bool BMDImporter::tryRead(oishii::BinaryReader& reader, pl::FileState& state)
 #ifndef NDEBUG
 	__lastReadDataForWriteDebug.resize(reader.endpos());
 	memcpy(__lastReadDataForWriteDebug.data(), reader.getStreamStart(), __lastReadDataForWriteDebug.size());
+	_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
 #endif
 
-	// reader.add_bp(0x6f00, 16);
+	// reader.add_bp(0x37ee0, 16);
 
 	//oishii::BinaryReader::ScopedRegion g(reader, "J3D Binary Model Data (.bmd)");
 	auto& j3dc = static_cast<J3DCollection&>(state);
 	BMDOutputContext ctx{ j3dc.mModel, reader };
 
 	// reader.add_bp<u32>(8);
-	// reader.add_bp(0x6800, 16);
+	// reader.add_bp(0x6970, 16);
 	// reader.add_bp(0x1d480, 16);
 
 	readBMD(reader, ctx);
@@ -219,7 +220,7 @@ struct BMDFile : public oishii::v2::Node
 		addNode(makeDRW1Node(exp));
 		addNode(makeJNT1Node(exp));
 		addNode(makeSHP1Node(exp));
-		//	addNode(makeMAT3Node(exp));
+		addNode(makeMAT3Node(exp));
 		//	addNode(makeTEX1Node(exp));
 		return {};
 	}
@@ -235,8 +236,8 @@ void BMD_Pad(char* dst, u32 len)
 }
 void exportBMD(oishii::v2::Writer& writer, J3DCollection& collection)
 {
-	//writer.attachDataForMatchingOutput(__lastReadDataForWriteDebug);
-	// writer.add_bp(0x379a0, 16);
+	// writer.attachDataForMatchingOutput(__lastReadDataForWriteDebug);
+	writer.add_bp(0x47cc0, 4);
 
 	oishii::v2::Linker linker;
 
@@ -246,6 +247,7 @@ void exportBMD(oishii::v2::Writer& writer, J3DCollection& collection)
 	bmd->mCollection = &collection;
 
 	linker.mUserPad = &BMD_Pad;
+	writer.mUserPad = &BMD_Pad;
 
 	linker.gather(std::move(bmd), "");
 	linker.write(writer);

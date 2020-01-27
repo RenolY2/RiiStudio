@@ -42,13 +42,13 @@ inline void operator<< <f32, 2>(glm::vec2& out, oishii::BinaryReader& reader)
 	out.y = reader.read<f32>();
 }
 
-static void operator>>(const glm::vec3& vec, oishii::v2::Writer& writer)
+inline void operator>>(const glm::vec3& vec, oishii::v2::Writer& writer)
 {
 	writer.write(vec.x);
 	writer.write(vec.y);
 	writer.write(vec.z);
 }
-static void operator>>(const glm::vec2& vec, oishii::v2::Writer& writer)
+inline void operator>>(const glm::vec2& vec, oishii::v2::Writer& writer)
 {
 	writer.write(vec.x);
 	writer.write(vec.y);
