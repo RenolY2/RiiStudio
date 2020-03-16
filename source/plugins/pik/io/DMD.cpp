@@ -22,29 +22,47 @@ inline bool ends_with(const std::string& value, const std::string& ending) {
 class DMD {
 public:
 	std::string canRead(const std::string& file, oishii::BinaryReader& reader) const {
-		return ends_with(file, "dmd") ? typeid(PikminCollection).name() : "";
+		return ends_with(file, "dmd") || ends_with(file, "mod") ? typeid(PikminCollection).name() : "";
+	}
+	bool canWrite(kpi::IDocumentNode& node) const {
+		return dynamic_cast<PikminCollection*>(&node) != nullptr;
 	}
 
-	void readModel(PikminModelAccessor model, Parser& parser) const {
+	// Read a DMD file
+	void readModelAscii(PikminModelAccessor model, Parser& parser) const {
 		model.get().nJoints = 3;
+	}
+	// Read a MOD file
+	void readModelBinary(PikminModelAccessor model, oishii::BinaryReader& reader) const {
+		model.get().nJoints = 3;
+	}
+
+	// Write MOD/DMD file
+	void write(kpi::IDocumentNode& node, oishii::v2::Writer& writer) const {
+
 	}
 
 	void read(kpi::IDocumentNode& node, oishii::BinaryReader& reader) const {
 		assert(dynamic_cast<PikminCollection*>(&node) != nullptr);
 		PikminCollectionAccessor collection(&node);
 
-		// Awful code but not a real issue...
-		std::string data;
-		data.resize(reader.endpos());
-		memcpy(data.data(), reader.getStreamStart(), data.size());
-		Parser parser(std::stringstream{ data });
+		if (ends_with(reader.getFile(), "dmd")) {
+			// Awful code but not a real issue...
+			std::string data;
+			data.resize(reader.endpos());
+			memcpy(data.data(), reader.getStreamStart(), data.size());
+			Parser parser(std::stringstream{ data });
 
-		readModel(collection.addPikminModel(), parser);
+			readModelAscii(collection.addPikminModel(), parser);
+		} else if (ends_with(reader.getFile(), "mod")) {
+			readModelBinary(collection.addPikminModel(), reader);
+		}
 	}
 };
 
 void InstallDMD(kpi::ApplicationPlugins& installer) {
 	installer.addDeserializer<DMD>();
+	installer.addSerializer<DMD>();
 }
 
 } // namespace riistudio::pik
