@@ -147,7 +147,9 @@ struct SceneState
 		mTextures.clear();
 		texIdMap.clear();
 
-		const auto textures = root.getFolder<lib3d::Texture>();
+		if (root.getFolder<lib3d::Texture>() == nullptr) return;
+
+		const auto* textures = root.getFolder<lib3d::Texture>();
 
 		mTextures.resize(textures->size());
 		std::vector<u8> data(1024 * 1024 * 4);
