@@ -12,9 +12,20 @@
 
 #ifdef _WIN32
 #include <vendor/glfw/glfw3.h>
+#else
+#include <SDL.h>
+
+#include <emscripten.h>
+
+#include <emscripten/html5.h>
 #endif
 
 #include <algorithm>
+
+// Web security...
+#ifdef __EMSCRIPTEN__
+extern bool gPointerLock;
+#endif
 
 namespace riistudio::frontend {
 
@@ -321,6 +332,11 @@ struct RenderTest : public StudioWindow
 #ifdef RII_BACKEND_GLFW
 			if (mpGlfwWindow != nullptr)
 				glfwSetInputMode(mpGlfwWindow, GLFW_CURSOR, showCursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+#elif defined(RII_BACKEND_SDL) && defined(__EMSCRIPTEN__)
+			gPointerLock = !showCursor;
+			if (showCursor) emscripten_exit_pointerlock();
+			else emscripten_request_pointerlock(0, EM_TRUE);
+			// SDL_SetRelativeMouseMode(!showCursor ? SDL_TRUE : SDL_FALSE);
 #endif
 			mViewport.end();
 		}

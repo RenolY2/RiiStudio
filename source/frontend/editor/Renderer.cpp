@@ -455,10 +455,17 @@ void Renderer::render(u32 width, u32 height, bool& showCursor)
 		if (keys[SDL_SCANCODE_D])
 #endif
 			eye += right * deltaTime * speed;
-
+#ifdef RII_BACKEND_GLFW
 		if ((ImGui::IsKeyDown(' ') && combo_choice_cam == 0) || ImGui::IsKeyDown('E'))
+#else
+		if ((keys[SDL_SCANCODE_SPACE] && combo_choice_cam == 0) || keys[SDL_SCANCODE_E])
+#endif
 			eye += up * deltaTime * speed;
+#ifdef RII_BACKEND_GLFW
 		if ((ImGui::IsKeyDown(340) && combo_choice_cam == 0) || ImGui::IsKeyDown('Q')) // GLFW_KEY_LEFT_SHIFT
+#else
+		if ((keys[SDL_SCANCODE_LSHIFT] && combo_choice_cam == 0) || keys[SDL_SCANCODE_Q])
+#endif
 			eye -= up * deltaTime * speed;
 	}
 	else // if (inCtrl)
