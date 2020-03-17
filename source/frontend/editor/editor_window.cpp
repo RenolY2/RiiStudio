@@ -693,7 +693,7 @@ struct MatEditor : public StudioWindow
 												int texmatrixid = 0;
 												const int rawtgmatrix = static_cast<int>(tg.matrix);
 												if (rawtgmatrix >= static_cast<int>(libcube::gx::TexMatrix::TexMatrix0) && rawtgmatrix <= static_cast<int>(libcube::gx::TexMatrix::TexMatrix7)) {
-													texmatrixid = rawtgmatrix - static_cast<int>(libcube::gx::TexMatrix::TexMatrix0);
+													texmatrixid = (rawtgmatrix - static_cast<int>(libcube::gx::TexMatrix::TexMatrix0)) / 3;
 												}
 												ImGui::Checkbox("Identity Matrix", &identitymatrix);
 												ImGui::SameLine();
@@ -702,7 +702,7 @@ struct MatEditor : public StudioWindow
 													ImGui::SliderInt("Matrix ID", &texmatrixid, 0, 7);
 												}
 												libcube::gx::TexMatrix newtexmatrix = identitymatrix ? libcube::gx::TexMatrix::Identity :
-													static_cast<libcube::gx::TexMatrix>(static_cast<int>(libcube::gx::TexMatrix::TexMatrix0) + texmatrixid);
+													static_cast<libcube::gx::TexMatrix>(static_cast<int>(libcube::gx::TexMatrix::TexMatrix0) + texmatrixid * 3);
 												AUTO_PROP(texGens[i].matrix, newtexmatrix);
 											}
 											{

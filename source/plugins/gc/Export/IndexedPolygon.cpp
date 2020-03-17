@@ -255,7 +255,8 @@ void IndexedPolygon::propogate(VBOBuilder& out) const
 	{
 		if (!(final_bitfield & (1 << i))) continue;
 
-		const auto& def = getVertexAttribGenDef((gx::VertexAttribute)i);
+		const auto def = getVertexAttribGenDef((gx::VertexAttribute)i);
+		assert(def.first.name != nullptr);
 		out.mPropogating[def.second].first = VAOEntry{ (u32)def.second, def.first.name, def.first.format, def.first.size * 4 };
 	}
 }

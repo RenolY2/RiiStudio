@@ -303,7 +303,7 @@ static void readModel(G3DModelAccessor& mdl, oishii::BinaryReader& reader) {
 			mtx->translate << reader;
 			mat.texMatrices.push_back(std::move(mtx));
 		}
-		reader.seek((8 - nTex) * 5 * sizeof(f32));
+		reader.seekSet(start + 0x250);
 		for (u8 i = 0; i < nTex; ++i) {
 			auto& mtx = mat.texMatrices[i];
 
@@ -341,7 +341,8 @@ static void readModel(G3DModelAccessor& mdl, oishii::BinaryReader& reader) {
 			reader.read<u8>(); // effect mtx flag
 			for (auto& f : mtx->effectMatrix) f = reader.read<f32>();
 		}
-		reader.seek((8 - nTex)* (4 + (4 * 4 * sizeof(f32))));
+		// reader.seek((8 - nTex)* (4 + (4 * 4 * sizeof(f32))));
+		reader.seekSet(start + 0x3f0);
 		for (u8 i = 0; i < mat.info.nColorChan; ++i) {
 			// skip runtime flag
 			reader.read<u32>();

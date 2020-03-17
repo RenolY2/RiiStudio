@@ -152,7 +152,7 @@ struct SceneState
 		const auto* textures = root.getFolder<lib3d::Texture>();
 
 		mTextures.resize(textures->size());
-		std::vector<u8> data(1024 * 1024 * 4);
+		std::vector<u8> data(1024 * 1024 * 4 * 2);
 		for (int i = 0; i < textures->size(); ++i)
 		{
 			const auto& tex = textures->at<lib3d::Texture>(i);
@@ -172,7 +172,7 @@ struct SceneState
 			tex.decode(data, false);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.getWidth(), tex.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
 			// TODO
-			// glGenerateMipmap(GL_TEXTURE_2D);
+			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 	}
 
@@ -265,13 +265,13 @@ struct SceneState
 		glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-
+		
 		MegaState state;
 
 		for (const auto& node : mTree.opaque)
 		{
 			node->mat.setMegaState(state);
+			
 			glEnable(GL_BLEND);
 			glBlendFunc(state.blendSrcFactor, state.blendDstFactor);
 			glBlendEquation(state.blendMode);
@@ -286,6 +286,10 @@ struct SceneState
 			}
 			glFrontFace(state.frontFace);
 			// TODO: depthWrite, depthCompare
+			// glDepthMask(state.depthWrite ? GL_TRUE : GL_FALSE);
+			glDepthFunc(state.depthCompare);
+
+
 			assert(mVbo.VAO && node->idx_size >= 0 && node->idx_size % 3 == 0);
 			glUseProgram(node->shader.getId());
 			mUboBuilder.use(node->mtx_id);
@@ -503,6 +507,8 @@ void Renderer::render(u32 width, u32 height, bool& showCursor)
 	const f32 dist = glm::distance(bound.m_minBounds, bound.m_maxBounds);
 	if (speed == 0.0f)
 		speed = dist / 10.0f;
+	if (speed == 0.0f)
+		speed = 6000.0;
 	//cmin = std::min(std::min(bound.m_minBounds.x, bound.m_minBounds.y), bound.m_minBounds.z) * 100;
 	//cmax = std::max(std::max(bound.m_maxBounds.x, bound.m_maxBounds.y), bound.m_maxBounds.z) * 100;
 	if (eye == glm::vec3{ 0.0f })
