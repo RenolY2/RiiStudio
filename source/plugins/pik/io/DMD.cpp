@@ -12,6 +12,8 @@
 
 #include <plugins/pik/util/Parser.hpp>
 
+#include <core/util/crc.hpp>
+
 namespace riistudio::pik {
 
 inline bool ends_with(const std::string& value, const std::string& ending) {
@@ -30,7 +32,36 @@ public:
 
 	// Read a DMD file
 	void readModelAscii(PikminModelAccessor model, Parser& parser) const {
-		model.get().nJoints = 3;
+		while (!parser.atEnd()) {
+			const auto block_name = parser.readToken();
+			switch (crc32(block_name)) {
+			case crc32("<INFORMATION>"):
+				assert(parser.getToken() == "{");
+				parser.readToken();
+				while (parser.getToken() != "}") {
+					switch (crc32(parser.readToken())) {
+					case crc32("version"):
+						break;
+					case crc32("filename"):
+						break;
+					case crc32("toolname"):
+						break;
+					case crc32("source"):
+						break;
+						// date, time, host, magnify, suitable_joint
+					case crc32("numjoints"):
+						model.get().nJoints = std::stoi(parser.readToken());
+						break;
+						// scalingrule, primitive, embossbump, compress_mat, vtxclranm
+					default:
+						break;
+					}
+				}
+				break;
+			default:
+				return;
+			}
+		}
 	}
 	// Read a MOD file
 	void readModelBinary(PikminModelAccessor model, oishii::BinaryReader& reader) const {
@@ -51,7 +82,8 @@ public:
 			std::string data;
 			data.resize(reader.endpos());
 			memcpy(data.data(), reader.getStreamStart(), data.size());
-			Parser parser(std::stringstream{ data });
+			std::stringstream stream{ data };
+			Parser parser{ stream };
 
 			readModelAscii(collection.addPikminModel(), parser);
 		} else if (ends_with(reader.getFile(), "mod")) {
