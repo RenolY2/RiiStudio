@@ -78,24 +78,6 @@ void BMD_Pad(char* dst, u32 len)
 	//assert(len < 30);
 	memcpy(dst, "This is padding data to alignment.....", len);
 }
-void exportBMD(oishii::v2::Writer& writer, CollectionAccessor collection)
-{
-	// writer.attachDataForMatchingOutput(__lastReadDataForWriteDebug);
-	writer.add_bp(0x37ba0, 16);
-
-	oishii::v2::Linker linker;
-
-	auto bmd = std::make_unique<BMDFile>();
-	// bmd->bBDL = collection.bdl;
-	bmd->bMimic = true;
-	bmd->mCollection = collection;
-
-	linker.mUserPad = &BMD_Pad;
-	writer.mUserPad = &BMD_Pad;
-
-	linker.gather(std::move(bmd), "");
-	linker.write(writer);
-}
 class BMD {
 public:
 	std::string canRead(const std::string& file, oishii::BinaryReader& reader) const {
@@ -106,7 +88,21 @@ public:
 	}
 
 	void write(kpi::IDocumentNode& node, oishii::v2::Writer& writer) const {
+		assert(dynamic_cast<Collection*>(&node) != nullptr);
+		CollectionAccessor collection(&node);
 
+		oishii::v2::Linker linker;
+
+		auto bmd = std::make_unique<BMDFile>();
+		bmd->bBDL = false; // collection.bdl;
+		bmd->bMimic = true;
+		bmd->mCollection = collection;
+
+		linker.mUserPad = &BMD_Pad;
+		writer.mUserPad = &BMD_Pad;
+
+		linker.gather(std::move(bmd), "");
+		linker.write(writer);
 	}
 
 	void read(kpi::IDocumentNode& node, oishii::BinaryReader& reader) const {
