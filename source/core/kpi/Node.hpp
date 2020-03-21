@@ -298,6 +298,8 @@ public:
 		assert(dynamic_cast<TDocumentNode<T>*>(&node) != nullptr);
 		data = reinterpret_cast<TDocumentNode<T>*>(&node);
 	}
+	operator T& () { return get(); }
+	operator const T& () const { return get(); }
 
 #define __KPI_FMT_NODE(type) get##type##s
 #define KPI_NODE_FOLDER(type, acc) \

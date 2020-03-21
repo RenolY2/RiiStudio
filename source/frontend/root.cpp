@@ -11,6 +11,7 @@
 
 #include <plugins/gc/Export/Install.hpp>
 #include <plugins/pik/installer.hpp>
+#include <plugins/j3d/Installer.hpp>
 
 namespace riistudio::g3d {
 void Install();
@@ -236,7 +237,7 @@ RootWindow::RootWindow()
 	// Register plugins
 	//	lib3d::install();
 	libcube::Install();
-	// libcube::jsystem::Install();
+	j3d::Install(*kpi::ApplicationPlugins::getInstance());
 	g3d::Install();
 	pik::Install(*kpi::ApplicationPlugins::getInstance());
 
