@@ -72,7 +72,7 @@ struct MaterialData : public libcube::GCMaterialData
 	struct J3DSamplerData : SamplerData
 	{
 		// Only for linking
-		u32 btiId;
+		u16 btiId;
 
 		J3DSamplerData(u32 id)
 			: btiId(id)

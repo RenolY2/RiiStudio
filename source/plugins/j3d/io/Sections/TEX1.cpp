@@ -132,6 +132,21 @@ void readTEX1(BMDOutputContext& ctx)
 				}
 			}
 		}
+		for (auto& samp : ctx.mdl.get().mMatCache.samplers) {
+			if (samp.btiId == i)
+			{
+				samp.mTexture = nameTable[i];
+				samp.mWrapU = static_cast<libcube::gx::TextureWrapMode>(tex.mWrapU);
+				samp.mWrapV = static_cast<libcube::gx::TextureWrapMode>(tex.mWrapV);
+				// samp.bMipMap = tex.bMipMap;
+				samp.bEdgeLod = tex.bEdgeLod;
+				samp.bBiasClamp = tex.bBiasClamp;
+				samp.mMaxAniso = static_cast<libcube::gx::AnisotropyLevel>(tex.mMaxAniso);
+				samp.mMinFilter = static_cast<libcube::gx::TextureFilter>(tex.mMinFilter);
+				samp.mMagFilter = static_cast<libcube::gx::TextureFilter>(tex.mMagFilter);
+				samp.mLodBias = static_cast<f32>(tex.mLodBias) / 100.0f;
+			}
+		}
 		auto& inf = texRaw.emplace_back(std::make_unique<Texture>(), std::pair<u32, u32>{0, 0});
 		auto& data = *inf.first.get();
 
