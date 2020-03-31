@@ -101,6 +101,9 @@ public:
 		linker.mUserPad = &BMD_Pad;
 		writer.mUserPad = &BMD_Pad;
 
+
+		writer.add_bp(0x37b2c, 4);
+
 		linker.gather(std::move(bmd), "");
 		linker.write(writer);
 	}

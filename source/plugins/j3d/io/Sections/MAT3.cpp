@@ -159,6 +159,8 @@ void readMatEntry(Material& mat, MatLoader& loader, oishii::BinaryReader& reader
 	assert(reader.tell() % 4 == 0);
 	mat.flag = reader.read<u8>();
 	mat.cullMode = loader.indexed<u8>(MatSec::CullModeInfo).as<gx::CullMode, u32>();
+	// TODO:
+	mat.cullMode = libcube::gx::CullMode::Back;
 	mat.info.nColorChan = loader.indexed<u8>(MatSec::NumTexGens).raw();
 	mat.info.nTexGen = loader.indexed<u8>(MatSec::NumTexGens).raw();
 	mat.info.nTevStage = loader.indexed<u8>(MatSec::NumTevStages).raw();
@@ -309,9 +311,25 @@ void readMAT3(BMDOutputContext& ctx)
 
 		for (int i = 0; i < (int)MatSec::Max; ++i) {
 			const auto begin = loader.mSections[i];
+			if (!begin) continue;
 			// NBT scale hack..
-			const auto end = (i + 1 == (int)MatSec::Max) ? 16 : loader.mSections[i + 1];
-			const auto size = begin > 0 ? end - begin : 0;
+			auto end = 0;
+			if (i + 1 == (int)MatSec::Max) {
+				end = -1;
+			}
+			else {
+				bool found = false;
+				for (int j = i+1; !found && j < (int)MatSec::Max; ++j) {
+					if (loader.mSections[j]) {
+						end = loader.mSections[j];
+						found = true;
+					}
+				}
+				assert(found);
+			}
+			assert(i + 1 == (int)MatSec::Max || end == loader.mSections[i + 1] || loader.mSections[i + 1] == 0);
+			auto size = begin > 0 ? end - begin : 0;
+			if (end == -1) size = 16; // NBT hack
 			if (size <= 0) continue;
 
 			auto readCacheEntry = [&](auto& out, std::size_t entry_size) {
@@ -541,7 +559,7 @@ public:
 		return mEntries[idx];
 	}
 
-protected:
+public:
 	std::vector<T> mEntries;
 };
 struct MAT3Node;
@@ -556,16 +574,37 @@ struct SerializableMaterial
 
 	bool operator==(const SerializableMaterial& rhs) const noexcept;
 };
-
+auto find = [](const auto& buf, const auto x) {
+	auto found = std::find(buf.begin(), buf.end(), x);
+	// if (found == buf.end()) {
+	// 	buf.push_back(x);
+	// }
+	assert(found != buf.end());
+	return found == buf.end() ? -1 : found - buf.begin();
+};
 template<typename TIdx, typename T, typename TPool>
-void write_array_vec(oishii::v2::Writer& writer, const T& vec, const TPool& pool)
+void write_array_vec(oishii::v2::Writer& writer, const T& vec, TPool& pool)
 {
 	for (int i = 0; i < vec.nElements; ++i)
-		writer.write<TIdx>(pool.find(vec[i]));
+		writer.write<TIdx>(find(pool, vec[i]));
 	for (int i = vec.nElements; i < vec.max_size(); ++i)
 		writer.write<TIdx>(-1);
 }
+template<typename T>
+int write_cache(oishii::v2::Writer& writer, const std::vector<T>& cache) {
+	// while (writer.tell() % io_wrapper<T>::SizeOf) writer.write(0xff);
+	const auto start = writer.tell();
+	for (auto& x : cache) {
+		io_wrapper<T>::onWrite(writer, x);
+	}
+	return start;
+}
 
+template<>
+struct io_wrapper<SerializableMaterial>
+{
+	static void onWrite(oishii::v2::Writer& writer, const SerializableMaterial& smat);
+};
 struct MAT3Node : public oishii::v2::Node
 {
 	template<typename T, MatSec s>
@@ -575,55 +614,7 @@ struct MAT3Node : public oishii::v2::Node
 
 	struct EntrySection final : public Section<SerializableMaterial, MatSec::Max>
 	{
-		struct LUTNode final : oishii::v2::LeafNode
-		{
-			LUTNode(const std::vector<u16>& lut)
-				: mLut(lut)
-			{
-				mId = "MLUT";
-			}
-			Result write(oishii::v2::Writer& writer) const noexcept override
-			{
-				for (const auto e : mLut)
-					writer.write<u16>(e);
-
-				return {};
-			}
-			const std::vector<u16>& mLut;
-		};
-		struct NameTableNode final : oishii::v2::LeafNode
-		{
-			NameTableNode(const ModelAccessor mdl, const std::string& name)
-				: mMdl(mdl)
-			{
-				mId = name;
-				getLinkingRestriction().alignment = 4;
-			}
-			Result write(oishii::v2::Writer& writer) const noexcept override
-			{
-				std::vector<std::string> names(mMdl.getMaterials().size());
-				int i = 0;
-				for (int i = 0; i < mMdl.getMaterials().size(); ++i)
-					names[i] = mMdl.getMaterial(i).get().name;
-				writeNameTable(writer, names);
-				writer.alignTo(4);
-
-				return {};
-			}
-			const ModelAccessor mMdl;
-		};
-		std::unique_ptr<oishii::v2::Node> spawnDataEntries(const std::string& name) const noexcept
-		{
-			return spawnNode(name);
-		}
-		std::unique_ptr<oishii::v2::Node> spawnIDLookupTable() const noexcept
-		{
-			return std::make_unique<LUTNode>(mLut);
-		}
-		std::unique_ptr<oishii::v2::Node> spawnNameTable(const std::string& name) const noexcept
-		{
-			return std::make_unique<NameTableNode>(mMdl, name);
-		}
+	
 
 		EntrySection(const ModelAccessor mdl, const MAT3Node& mat3)
 			: mMdl(mdl)
@@ -640,37 +631,7 @@ struct MAT3Node : public oishii::v2::Node
 	const ModelAccessor mMdl;
 	bool hasIndirect = false;
 	EntrySection mEntries;
-
-	
-	MCompressableVector<Model::Indirect, 4, 0, false> mIndirect;
-	Section<gx::CullMode, MatSec::CullModeInfo> mCullModes;
-	Section<gx::Color, MatSec::MaterialColors> mMaterialColors;
-	Section<u8, MatSec::NumColorChannels> mNumColorChannels;
-	Section<gx::ChannelControl, MatSec::ColorChannelInfo> mChannelControls;
-	Section<gx::Color, MatSec::AmbientColors> mAmbColors;
-	Section<gx::Color, MatSec::LightInfo> mLightColors;
-	Section<u8, MatSec::NumTexGens> mNumTexGens;
-	Section<gx::TexCoordGen, MatSec::TexGenInfo> mTexGens;
-	Section<gx::TexCoordGen, MatSec::PostTexGenInfo> mPostTexGens; // TODO...
-	Section<Material::TexMatrix, MatSec::TexMatrixInfo> mTexMatrices;
-	Section<Material::TexMatrix, MatSec::PostTexMatrixInfo> mPostTexMatrices;
-	Section<Material::J3DSamplerData, MatSec::TextureRemapTable> mTextureTable;
-	Section<TevOrder, MatSec::TevOrderInfo> mOrders;
-	Section<gx::ColorS10, MatSec::TevColors> mTevColors;
-	Section<gx::Color, MatSec::TevKonstColors> mKonstColors;
-
-	Section<u8, MatSec::NumTevStages> mNumTevStages;
-	Section<gx::TevStage, MatSec::TevStageInfo> mTevStages;
-	Section<SwapSel, MatSec::TevSwapModeInfo> mSwapModes;
-	Section<gx::SwapTableEntry, MatSec::TevSwapModeTableInfo> mSwapTables;
-	Section<Fog, MatSec::FogInfo> mFogs;
-
-	Section<gx::AlphaComparison, MatSec::AlphaCompareInfo> mAlphaComparisons;
-	Section<gx::BlendMode, MatSec::BlendModeInfo> mBlendModes;
-	Section<gx::ZMode, MatSec::ZModeInfo> mZModes;
-	Section<u8, MatSec::ZCompareInfo> mZCompLocs;
-	Section<u8, MatSec::DitherInfo> mDithers;
-	Section<NBTScale, MatSec::NBTScaleInfo> mNBTScales;
+	const Model::MatCache& mCache;
 
 	gx::TexCoordGen postTexGen(const gx::TexCoordGen& gen) const noexcept
 	{
@@ -680,111 +641,16 @@ struct MAT3Node : public oishii::v2::Node
 	}
 
 	MAT3Node(const BMDExportContext& ctx)
-		: mMdl(ctx.mdl), mEntries(ctx.mdl, *this)
+		: mMdl(ctx.mdl), mEntries(ctx.mdl, *this), mCache(ctx.mdl.get().mMatCache)
 	{
 		mId = "MAT3";
 		getLinkingRestriction().alignment = 32;
 
-		for (int i = 0; i < ctx.mdl.getMaterials().size(); ++i)
-		{
-			const auto& mat = ctx.mdl.getMaterial(i).get();
-			if (mat.indEnabled)
-				hasIndirect = true;
-
-			// mCullModes.append(mat.cullMode);
-			for (int i = 0; i < mat.chanData.size(); ++i)
-				mMaterialColors.append(mat.chanData[i].matColor);
-			mNumColorChannels.append(mat.info.nColorChan);
-			for (int i = 0; i < mat.colorChanControls.size(); ++i)
-				mChannelControls.append(mat.colorChanControls[i]);
-			for (int i = 0; i < mat.chanData.size(); ++i)
-				mAmbColors.append(mat.chanData[i].ambColor);
-			for (int i = 0; i < mat.lightColors.size(); ++i)
-				mLightColors.append(mat.lightColors[i]);
-			mNumTexGens.append(mat.info.nTexGen);
-			for (int i = 0; i < mat.texGens.size(); ++i)
-				mTexGens.append(mat.texGens[i]);
-
-			for (int i = 0; i < mat.texGens.size(); ++i)
-				if (mat.texGens[i].postMatrix != gx::PostTexMatrix::Identity)
-					mPostTexGens.append(postTexGen(mat.texGens[i]));
-
-			for (int i = 0; i < mat.texMatrices.size(); ++i)
-				mTexMatrices.append(*mat.texMatrices[i].get());
-			for (int i = 0; i < mat.postTexMatrices.size(); ++i)
-				mPostTexMatrices.append(mat.postTexMatrices[i]);
-			for (int i = 0; i < mat.samplers.size(); ++i)
-				mTextureTable.append(static_cast<const Material::J3DSamplerData*>(mat.samplers[i].get())->btiId);
-			for (const auto& stage : mat.shader.mStages)
-				mOrders.append(TevOrder{ stage.rasOrder, stage.texMap, stage.texCoord });
-			for (int i = 0; i < mat.tevColors.size(); ++i)
-				mTevColors.append(mat.tevColors[i]);
-			for (int i = 0; i < mat.tevKonstColors.size(); ++i)
-				mKonstColors.append(mat.tevKonstColors[i]);
-			mNumTevStages.append(mat.info.nTevStage);
-			for (const auto& stage : mat.shader.mStages)
-			{
-				mTevStages.append(stage);
-				mSwapModes.append(SwapSel{stage.rasSwap, stage.texMapSwap});
-			}
-			for (const auto& table : mat.shader.mSwapTable)
-				mSwapTables.append(table);
-			mFogs.append(mat.fogInfo);
-			mAlphaComparisons.append(mat.alphaCompare);
-			mBlendModes.append(mat.blendMode);
-			mZModes.append(mat.zMode);
-			// mZCompLocs.append(mat.earlyZComparison);
-			// mDithers.append(mat.dither);
-			mNBTScales.append(mat.nbtScale);
-		}
-		mCullModes.append(gx::CullMode::Back);
-		mCullModes.append(gx::CullMode::Front);
-		mCullModes.append(gx::CullMode::None);
-		mZCompLocs.append(false);
-		mZCompLocs.append(true);
-		mDithers.append(false);
-		mDithers.append(true);
-		// Has to be use compressed entries
-		// if (hasIndirect)
-			for (int i = 0; i < mEntries.getNumEntries(); ++i)
-				mIndirect.append(Model::Indirect(mMdl.getMaterial(mEntries.getEntry(i).mIdx).get()));
 	}
 
-	const std::array<std::string, (u32)MatSec::Max + 3 + 1> sec_names = {
-		"Material Data",
-		"MLUT",
-		"Name Table",
-		"Indirect",
-		"Cull Modes",
-		"Material Colors",
-		"Channel Control Count",
-		"Channel Controls",
-		"Ambient Colors",
-		"Light Colors",
-		"Tex Gen Count",
-		"Tex Gens",
-		"Post Tex Gens",
-		"Tex Matrices",
-		"Post Tex Matrices",
-		"Texture ID Table",
-		"TEV Orders",
-		"TEV Colors",
-		"TEV Konstant Colors",
-		"TEV Stage Count",
-		"TEV Stages",
-		"TEV Swap Orders",
-		"TEV Swap Tables",
-		"Fogs",
-		"Alpha Comparisons",
-		"Blend Modes",
-		"Z Modes",
-		"Z Comparison Locations",
-		"Dithers",
-		"NBT Scales",
-		"NBT Scales" // For +1
-	};
 	Result write(oishii::v2::Writer& writer) const noexcept override
 	{
+		const auto start = writer.tell();
 		writer.write<u32, oishii::EndianSelect::Big>('MAT3');
 		writer.writeLink<s32>({ *this }, { *this, oishii::v2::Hook::EndOfChildren });
 
@@ -809,76 +675,131 @@ struct MAT3Node : public oishii::v2::Node
 			writer.writeLink<s32>({ *this }, { lnk });
 		};
 
-		writeSecLinkS("Material Data");
-		writeSecLinkS("MLUT");
-		writeSecLinkS("Name Table");
-		writeSecLink(mIndirect, 3);
+		const auto ofsEntries = writer.tell();
+		writer.write<s32>(-1);
+		const auto ofsLut = writer.tell();
+		writer.write<s32>(-1);
+		const auto ofsNameTab = writer.tell();
+		writer.write<s32>(-1);
+		auto tableCursor = writer.tell();
+		// For now, write padding
+		for (int i = 3; i <= 29; ++i)
+			writer.write<s32>(-1);
+
+	
+		auto entryStart = writer.tell();
+		for (auto& entry : mEntries.mEntries) {
+			io_wrapper<SerializableMaterial>::onWrite(writer, entry);
+		}
+
+		{
+			oishii::Jump<oishii::Whence::At, oishii::v2::Writer> g(writer, ofsEntries);
+			writer.write<s32>(entryStart - start);
+		}
 
 
+		{
+			auto lutStart = writer.tell();
 
-		writeSecLink(mCullModes, 4);
-		writeSecLink(mMaterialColors, 5);
-		writeSecLink(mNumColorChannels, 6);
-		writeSecLink(mChannelControls, 7);
-		writeSecLink(mAmbColors, 8);
-		writeSecLink(mLightColors, 9);
-		writeSecLink(mNumTexGens, 10);
-		writeSecLink(mTexGens, 11);
-		writeSecLink(mPostTexGens, 12);
-		writeSecLink(mTexMatrices, 13);
-		writeSecLink(mPostTexMatrices, 14);
-		writeSecLink(mTextureTable, 15);
-		writeSecLink(mOrders, 16);
-		writeSecLink(mTevColors, 17);
-		writeSecLink(mKonstColors, 18);
-		writeSecLink(mNumTevStages, 19);
-		writeSecLink(mTevStages, 20);
-		writeSecLink(mSwapModes, 21);
-		writeSecLink(mSwapTables, 22);
-		writeSecLink(mFogs, 23);
-		writeSecLink(mAlphaComparisons, 24);
-		writeSecLink(mBlendModes, 25);
-		writeSecLink(mZModes, 26);
-		writeSecLink(mZCompLocs, 27);
-		writeSecLink(mDithers, 28);
-		writeSecLink(mNBTScales, 29);
+			while (writer.tell() % 2) writer.write<u8>(0);
+			for (const auto e : mEntries.mLut)
+				writer.write<u16>(e);
+
+			oishii::Jump<oishii::Whence::At, oishii::v2::Writer> g(writer, ofsLut);
+			writer.write<s32>(lutStart - start);
+		}
+		{
+			auto nameTabStart = writer.tell();
+
+			std::vector<std::string> names(mMdl.getMaterials().size());
+			int i = 0;
+			for (int i = 0; i < mMdl.getMaterials().size(); ++i)
+				names[i] = mMdl.getMaterial(i).get().name;
+			writeNameTable(writer, names);
+			writer.alignTo(4);
+
+			oishii::Jump<oishii::Whence::At, oishii::v2::Writer> g(writer, ofsNameTab);
+			writer.write<s32>(nameTabStart - start);
+		}
+
+		auto dataPos = writer.tell();
+		auto writeBuf = [&](const auto& buf) {
+			int slide = 0;
+
+			if (!buf.empty()) {
+				while (writer.tell() % 4) writer.write<u8>(0);
+				const int ofs = write_cache(writer, buf);
+				slide = ofs - start;
+			}
+
+			oishii::Jump<oishii::Whence::Set, oishii::v2::Writer> g(writer, tableCursor);
+			writer.write<s32>(slide);
+			
+			tableCursor += 4;
+		};
+
+		// 3 indirect
+		writeBuf(mCache.indirectInfos);
+		// mCullModes, 4
+		writeBuf(mCache.cullModes);
+		// mMaterialColors, 5
+		writeBuf(mCache.matColors);
+		// mNumColorChannels, 6
+		writeBuf(mCache.nColorChan);
+		// mChannelControls, 7
+		writeBuf(mCache.colorChans);
+		// mAmbColors, 8
+		writeBuf(mCache.ambColors);
+		// mLightColors, 9
+		writeBuf(mCache.lightColors);
+		// mNumTexGens, 10
+		writeBuf(mCache.nTexGens);
+		// mTexGens, 11
+		writeBuf(mCache.texGens);
+		// mPostTexGens, 12
+		writeBuf(mCache.posTexGens);
+		// mTexMatrices, 13
+		writeBuf(mCache.texMatrices);
+		// mPostTexMatrices, 14
+		writeBuf(mCache.postTexMatrices);
+		// mTextureTable, 15
+		writeBuf(mCache.samplers);
+		// mOrders, 16
+		writeBuf(mCache.orders);
+		// mTevColors, 17
+		writeBuf(mCache.tevColors);
+		// mKonstColors, 18
+		writeBuf(mCache.konstColors);
+		// mNumTevStages, 19
+		writeBuf(mCache.nTevStages);
+		// mTevStages, 20
+		writeBuf(mCache.tevStages);
+		// mSwapModes, 21
+		writeBuf(mCache.swapModes);
+		// mSwapTables, 22
+		writeBuf(mCache.swapTables);
+		// mFogs, 23
+		writeBuf(mCache.fogs);
+		// mAlphaComparisons, 24
+		writeBuf(mCache.alphaComparisons);
+		// mBlendModes, 25
+		writeBuf(mCache.blendModes);
+		// mZModes, 26
+		writeBuf(mCache.zModes);
+		// mZCompLocs, 27
+		writeBuf(mCache.zCompLocs);
+		// mDithers, 28
+		writeBuf(mCache.dithers);
+		// mNBTScales, 29
+		writeBuf(mCache.nbtScales);
+
+		
 
 		return {};
 	}
 
 	Result gatherChildren(NodeDelegate& d) const noexcept override
 	{
-		d.addNode(mEntries.spawnDataEntries("Material Data"));
-		d.addNode(mEntries.spawnIDLookupTable());
-		d.addNode(mEntries.spawnNameTable("Name Table"));
-		// if (hasIndirect)
-			d.addNode(mIndirect.spawnNode("Indirect"));
-		d.addNode(mCullModes.spawnNode("Cull Modes"));
-		d.addNode(mMaterialColors.spawnNode("Material Colors"));
-		d.addNode(mNumColorChannels.spawnNode("Channel Control Count"));
-		d.addNode(mChannelControls.spawnNode("Channel Controls"));
-		d.addNode(mAmbColors.spawnNode("Ambient Colors"));
-		d.addNode(mLightColors.spawnNode("Light Colors"));
-		d.addNode(mNumTexGens.spawnNode("Tex Gen Count"));
-		d.addNode(mTexGens.spawnNode("Tex Gens"));
-		d.addNode(mPostTexGens.spawnNode("Post Tex Gens"));
-		d.addNode(mTexMatrices.spawnNode("Tex Matrices"));
-		d.addNode(mPostTexMatrices.spawnNode("Post Tex Matrices"));
-		d.addNode(mTextureTable.spawnNode("Texture ID Table"));
-		d.addNode(mOrders.spawnNode("TEV Orders"));
-		d.addNode(mTevColors.spawnNode("TEV Colors"));
-		d.addNode(mKonstColors.spawnNode("TEV Konstant Colors"));
-		d.addNode(mNumTevStages.spawnNode("TEV Stage Count"));
-		d.addNode(mTevStages.spawnNode("TEV Stages"));
-		d.addNode(mSwapModes.spawnNode("TEV Swap Orders"));
-		d.addNode(mSwapTables.spawnNode("TEV Swap Tables"));
-		d.addNode(mFogs.spawnNode("Fogs"));
-		d.addNode(mAlphaComparisons.spawnNode("Alpha Comparisons"));
-		d.addNode(mBlendModes.spawnNode("Blend Modes"));
-		d.addNode(mZModes.spawnNode("Z Modes"));
-		d.addNode(mZCompLocs.spawnNode("Z Comparison Locations"));
-		d.addNode(mDithers.spawnNode("Dithers"));
-		d.addNode(mNBTScales.spawnNode("NBT Scales"));
 		return {};
 	}
 };
@@ -886,118 +807,123 @@ bool SerializableMaterial::operator==(const SerializableMaterial& rhs) const noe
 {
 	return mMAT3.mMdl.getMaterial(mIdx).get() == rhs.mMAT3.mMdl.getMaterial(rhs.mIdx).get();
 }
-template<>
-struct io_wrapper<SerializableMaterial>
+void io_wrapper<SerializableMaterial>::onWrite(oishii::v2::Writer& writer, const SerializableMaterial& smat)
 {
-	static void onWrite(oishii::v2::Writer& writer, const SerializableMaterial& smat)
+	const Material& m = smat.mMAT3.mMdl.getMaterial(smat.mIdx).get();
+		
+	oishii::DebugExpectSized dbg(writer, 332);
+
+	
+
+	writer.write<u8>(m.flag);
+	writer.write<u8>(find(smat.mMAT3.mCache.cullModes, m.cullMode));
+	writer.write<u8>(find(smat.mMAT3.mCache.nColorChan, m.info.nColorChan));
+	writer.write<u8>(find(smat.mMAT3.mCache.nTexGens, m.info.nTexGen));
+	writer.write<u8>(find(smat.mMAT3.mCache.nTevStages, m.info.nTevStage));
+	writer.write<u8>(find(smat.mMAT3.mCache.zCompLocs, m.earlyZComparison));
+	writer.write<u8>(find(smat.mMAT3.mCache.zModes, m.zMode));
+	writer.write<u8>(find(smat.mMAT3.mCache.dithers, m.dither));
+
+	dbg.assertSince(0x008);
+	const auto& m3 = smat.mMAT3;
+	const auto& cache = m3.mCache;
+
+	array_vector<gx::Color, 2> matColors, ambColors;
+	for (int i = 0; i < m.chanData.size(); ++i)
 	{
-		const Material& m = smat.mMAT3.mMdl.getMaterial(smat.mIdx).get();
-		
-		oishii::DebugExpectSized dbg(writer, 332);
-
-		writer.write<u8>(m.flag);
-		writer.write<u8>(smat.mMAT3.mCullModes.find(m.cullMode));
-		writer.write<u8>(smat.mMAT3.mNumColorChannels.find(m.info.nColorChan));
-		writer.write<u8>(smat.mMAT3.mNumTexGens.find(m.info.nTexGen));
-		writer.write<u8>(smat.mMAT3.mNumTevStages.find(m.info.nTevStage));
-		writer.write<u8>(smat.mMAT3.mZCompLocs.find(m.earlyZComparison));
-		writer.write<u8>(smat.mMAT3.mZModes.find(m.zMode));
-		writer.write<u8>(smat.mMAT3.mDithers.find(m.dither));
-
-		dbg.assertSince(0x008);
-		const auto& m3 = smat.mMAT3;
-
-		array_vector<gx::Color, 2> matColors, ambColors;
-		for (int i = 0; i < m.chanData.size(); ++i)
-		{
-			matColors.push_back(m.chanData[i].matColor);
-			ambColors.push_back(m.chanData[i].ambColor);
-		}
-		write_array_vec<u16>(writer, matColors, m3.mMaterialColors);
-		write_array_vec<u16>(writer, m.colorChanControls, m3.mChannelControls);
-		write_array_vec<u16>(writer, ambColors, m3.mAmbColors);
-		write_array_vec<u16>(writer, m.lightColors, m3.mLightColors);
-		
-		for (int i = 0; i < m.texGens.size(); ++i)
-			writer.write<u16>(m3.mTexGens.find(m.texGens[i]));
-		for (int i = m.texGens.size(); i < m.texGens.max_size(); ++i)
-			writer.write<u16>(-1);
-
-		for (int i = 0; i < m.texGens.size(); ++i)
-			writer.write<u16>(m.texGens[i].postMatrix == gx::PostTexMatrix::Identity ?
-				-1 : m3.mPostTexGens.find(m3.postTexGen(m.texGens[i])));
-		for (int i = m.texGens.size(); i < m.texGens.max_size(); ++i)
-			writer.write<u16>(-1);
-
-		dbg.assertSince(0x048);
-		array_vector<Material::TexMatrix, 10> texMatrices;
-		for (int i = 0; i < m.texMatrices.size(); ++i)
-			texMatrices.push_back(*m.texMatrices[i].get());
-		write_array_vec<u16>(writer, texMatrices, m3.mTexMatrices);
-		// TODO: Assumption
-		write_array_vec<u16>(writer, m.postTexMatrices, m3.mPostTexMatrices);
-		//	write_array_vec<u16>(writer, texMatrices, m3.mTexMatrices);
-		//	for (int i = 0; i < 10; ++i)
-		//		writer.write<s16>(-1);
-
-		dbg.assertSince(0x084);
-		array_vector<Material::J3DSamplerData, 8> samplers;
-		samplers.nElements = m.samplers.size();
-		for (int i = 0; i < m.samplers.size(); ++i)
-			samplers[i] = (Material::J3DSamplerData&)*m.samplers[i].get();
-		dbg.assertSince(0x084);
-		write_array_vec<u16>(writer, samplers, m3.mTextureTable);
-		dbg.assertSince(0x094);
-		write_array_vec<u16>(writer, m.tevKonstColors, m3.mKonstColors);
-
-		dbg.assertSince(0x09C);
-		// TODO -- comparison logic might need to account for ksels being here
-		for (int i = 0; i < m.shader.mStages.size(); ++i)
-			writer.write<u8>(static_cast<u8>(m.shader.mStages[i].colorStage.constantSelection));
-		for (int i = m.shader.mStages.size(); i < 16; ++i)
-			writer.write<u8>(0xc); // Default
-
-		dbg.assertSince(0x0AC);
-		for (int i = 0; i < m.shader.mStages.size(); ++i)
-			writer.write<u8>(static_cast<u8>(m.shader.mStages[i].alphaStage.constantSelection));
-		for (int i = m.shader.mStages.size(); i < 16; ++i)
-			writer.write<u8>(0x1c); // Default
-
-		dbg.assertSince(0x0bc);
-		for (int i = 0; i < m.shader.mStages.size(); ++i)
-			writer.write<u16>(m3.mOrders.find(TevOrder{ m.shader.mStages[i].rasOrder, m.shader.mStages[i].texMap, m.shader.mStages[i].texCoord }));
-		for (int i = m.shader.mStages.size(); i < 16; ++i)
-			writer.write<u16>(-1);
-
-		dbg.assertSince(0x0dc);
-		write_array_vec<u16>(writer, m.tevColors, m3.mTevColors);
-
-		dbg.assertSince(0x0e4);
-		for (int i = 0; i < m.shader.mStages.size(); ++i)
-			writer.write<u16>(m3.mTevStages.find(m.shader.mStages[i]));
-		for (int i = m.shader.mStages.size(); i < 16; ++i)
-			writer.write<u16>(-1);
-
-		dbg.assertSince(0x104);
-		for (int i = 0; i < m.shader.mStages.size(); ++i)
-			writer.write<u16>(m3.mSwapModes.find(SwapSel{ m.shader.mStages[i].rasSwap, m.shader.mStages[i].texMapSwap }));
-		for (int i = m.shader.mStages.size(); i < 16; ++i)
-			writer.write<u16>(-1);
-
-		dbg.assertSince(0x124);
-		for (const auto& table : m.shader.mSwapTable)
-			writer.write<u16>(m3.mSwapTables.find(table));
-
-		for (const u8 s : m.stackTrash)
-			writer.write<u8>(s);
-
-		dbg.assertSince(0x144);
-		writer.write<u16>(m3.mFogs.find(m.fogInfo));
-		writer.write<u16>(m3.mAlphaComparisons.find(m.alphaCompare));
-		writer.write<u16>(m3.mBlendModes.find(m.blendMode));
-		writer.write<u16>(m3.mNBTScales.find(m.nbtScale));
+		matColors.push_back(m.chanData[i].matColor);
+		ambColors.push_back(m.chanData[i].ambColor);
 	}
-};
+	write_array_vec<u16>(writer, matColors, cache.matColors);
+	write_array_vec<u16>(writer, m.colorChanControls, cache.colorChans);
+	write_array_vec<u16>(writer, ambColors, cache.ambColors);
+	write_array_vec<u16>(writer, m.lightColors, cache.lightColors);
+		
+	for (int i = 0; i < m.texGens.size(); ++i)
+		writer.write<u16>(find(cache.texGens, m.texGens[i]));
+	for (int i = m.texGens.size(); i < m.texGens.max_size(); ++i)
+		writer.write<u16>(-1);
+
+	for (int i = 0; i < m.texGens.size(); ++i)
+		writer.write<u16>(m.texGens[i].postMatrix == gx::PostTexMatrix::Identity ?
+			-1 : find(cache.posTexGens, m3.postTexGen(m.texGens[i])));
+	for (int i = m.texGens.size(); i < m.texGens.max_size(); ++i)
+		writer.write<u16>(-1);
+
+	dbg.assertSince(0x048);
+	array_vector<Material::TexMatrix, 10> texMatrices;
+	for (int i = 0; i < m.texMatrices.size(); ++i)
+		texMatrices.push_back(*m.texMatrices[i].get());
+	write_array_vec<u16>(writer, texMatrices, cache.texMatrices);
+	// TODO: Assumption
+	write_array_vec<u16>(writer, m.postTexMatrices, cache.postTexMatrices);
+	//	write_array_vec<u16>(writer, texMatrices, m3.mTexMatrices);
+	//	for (int i = 0; i < 10; ++i)
+	//		writer.write<s16>(-1);
+
+	dbg.assertSince(0x084);
+	array_vector<Material::J3DSamplerData, 8> samplers;
+	samplers.nElements = m.samplers.size();
+	for (int i = 0; i < m.samplers.size(); ++i)
+		samplers[i] = (Material::J3DSamplerData&)*m.samplers[i].get();
+	dbg.assertSince(0x084);
+	write_array_vec<u16>(writer, samplers, cache.samplers);
+	dbg.assertSince(0x094);
+	write_array_vec<u16>(writer, m.tevKonstColors, cache.konstColors);
+
+	dbg.assertSince(0x09C);
+	// TODO -- comparison logic might need to account for ksels being here
+	for (int i = 0; i < m.shader.mStages.size(); ++i)
+		writer.write<u8>(static_cast<u8>(m.shader.mStages[i].colorStage.constantSelection));
+	for (int i = m.shader.mStages.size(); i < 16; ++i)
+		writer.write<u8>(0xc); // Default
+
+	dbg.assertSince(0x0AC);
+	for (int i = 0; i < m.shader.mStages.size(); ++i)
+		writer.write<u8>(static_cast<u8>(m.shader.mStages[i].alphaStage.constantSelection));
+	for (int i = m.shader.mStages.size(); i < 16; ++i)
+		writer.write<u8>(0x1c); // Default
+
+	dbg.assertSince(0x0bc);
+	for (int i = 0; i < m.shader.mStages.size(); ++i)
+		writer.write<u16>(find(cache.orders, TevOrder{ m.shader.mStages[i].rasOrder, m.shader.mStages[i].texMap, m.shader.mStages[i].texCoord }));
+	for (int i = m.shader.mStages.size(); i < 16; ++i)
+		writer.write<u16>(-1);
+
+	dbg.assertSince(0x0dc);
+	write_array_vec<u16>(writer, m.tevColors, cache.tevColors);
+
+	dbg.assertSince(0x0e4);
+	for (int i = 0; i < m.shader.mStages.size(); ++i) {
+		libcube::gx::TevStage tmp;
+		tmp.colorStage = m.shader.mStages[i].colorStage;
+		tmp.colorStage.constantSelection = gx::TevKColorSel::k0;
+		tmp.alphaStage = m.shader.mStages[i].alphaStage;
+		tmp.alphaStage.constantSelection = gx::TevKAlphaSel::k0_a;
+		writer.write<u16>(find(cache.tevStages, tmp));
+	}
+	for (int i = m.shader.mStages.size(); i < 16; ++i)
+		writer.write<u16>(-1);
+
+	dbg.assertSince(0x104);
+	for (int i = 0; i < m.shader.mStages.size(); ++i)
+		writer.write<u16>(find(cache.swapModes, SwapSel{ m.shader.mStages[i].rasSwap, m.shader.mStages[i].texMapSwap }));
+	for (int i = m.shader.mStages.size(); i < 16; ++i)
+		writer.write<u16>(-1);
+
+	dbg.assertSince(0x124);
+	for (const auto& table : m.shader.mSwapTable)
+		writer.write<u16>(find(cache.swapTables, table));
+
+	for (const u8 s : m.stackTrash)
+		writer.write<u8>(s);
+
+	dbg.assertSince(0x144);
+	writer.write<u16>(find(cache.fogs, m.fogInfo));
+	writer.write<u16>(find(cache.alphaComparisons , m.alphaCompare));
+	writer.write<u16>(find(cache.blendModes, m.blendMode));
+	writer.write<u16>(find(cache.nbtScales, m.nbtScale));
+}
 std::unique_ptr<oishii::v2::Node> makeMAT3Node(BMDExportContext& ctx)
 {
 	return std::make_unique<MAT3Node>(ctx);

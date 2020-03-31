@@ -159,7 +159,8 @@ struct io_wrapper<gx::ChannelControl>
 			gx::AttenuationFunction::Specular,
 			gx::AttenuationFunction::None2,
 			gx::AttenuationFunction::Spotlight };
-		out.attenuationFn = cvt[reader.read<u8>()];
+		const auto in = reader.read<u8>();
+		out.attenuationFn = in < cvt.size() ? cvt[in] : (gx::AttenuationFunction)(in);
 		out.Ambient = static_cast<gx::ColorSource>(reader.read<u8>());
 
 		reader.read<u16>();
