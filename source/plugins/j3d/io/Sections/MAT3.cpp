@@ -699,9 +699,10 @@ struct MAT3Node : public oishii::v2::Node
 
 
 		{
-			auto lutStart = writer.tell();
 
 			while (writer.tell() % 2) writer.write<u8>(0);
+			auto lutStart = writer.tell();
+
 			for (const auto e : mEntries.mLut)
 				writer.write<u16>(e);
 
@@ -709,6 +710,8 @@ struct MAT3Node : public oishii::v2::Node
 			writer.write<s32>(lutStart - start);
 		}
 		{
+			while (writer.tell() % 4) writer.write<u8>(0);
+
 			auto nameTabStart = writer.tell();
 
 			std::vector<std::string> names(mMdl.getMaterials().size());

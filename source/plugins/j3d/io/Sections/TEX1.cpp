@@ -5,86 +5,86 @@
 
 namespace riistudio::j3d {
 
-struct Tex
+
+void Tex::transfer(oishii::BinaryReader& stream)
 {
-	u8 mFormat;
-	bool bTransparent;
-	u16 mWidth, mHeight;
-	u8 mWrapU, mWrapV;
-	u8 mPaletteFormat;
-	u16 nPalette;
-	u32 ofsPalette;
-	bool bMipMap;
-	bool bEdgeLod;
-	bool bBiasClamp;
-	u8 mMaxAniso;
-	u8 mMinFilter;
-	u8 mMagFilter;
-	s8 mMinLod;
-	s8 mMaxLod;
-	u8 mMipmapLevel;
-	s16 mLodBias;
-	u32 ofsTex;
+	oishii::DebugExpectSized dbg(stream, 0x20);
 
-	void transfer(oishii::BinaryReader& stream)
-	{
-		oishii::DebugExpectSized dbg(stream, 0x20);
+	mFormat = stream.read<u8>();
+	bTransparent = stream.read<u8>();
+	mWidth = stream.read<u16>();
+	mHeight = stream.read<u16>();
+	mWrapU = static_cast<libcube::gx::TextureWrapMode>(stream.read<u8>());
+	mWrapV = static_cast<libcube::gx::TextureWrapMode>(stream.read<u8>());
+	stream.seek(1);
+	stream.transfer(mPaletteFormat);
+	stream.transfer(nPalette);
+	stream.transfer(ofsPalette);
+	// assert(ofsPalette == 0 && "No palette support..");
+	stream.transfer(bMipMap);
+	stream.transfer(bEdgeLod);
+	stream.transfer(bBiasClamp);
+	mMaxAniso = static_cast<libcube::gx::AnisotropyLevel>(stream.read<u8>());
+	mMinFilter = static_cast<libcube::gx::TextureFilter>(stream.read<u8>());
+	mMagFilter = static_cast<libcube::gx::TextureFilter>(stream.read<u8>());
+	stream.transfer<s8>(mMinLod);
+	stream.transfer<s8>(mMaxLod);
+	stream.transfer<u8>(mMipmapLevel);
+	stream.seek(1);
+	stream.transfer(mLodBias);
+	stream.transfer(ofsTex);
+}
+void Tex::write(oishii::v2::Writer& stream) const
+{
+	oishii::DebugExpectSized dbg(stream, 0x20 - 4);
 
-		stream.transfer(mFormat);
-		stream.transfer(bTransparent);
-		stream.transfer(mWidth);
-		stream.transfer(mHeight);
-		stream.transfer(mWrapU);
-		stream.transfer(mWrapV);
-		stream.seek(1);
-		stream.transfer(mPaletteFormat);
-		stream.transfer(nPalette);
-		stream.transfer(ofsPalette);
-		// assert(ofsPalette == 0 && "No palette support..");
-		stream.transfer(bMipMap);
-		stream.transfer(bEdgeLod);
-		stream.transfer(bBiasClamp);
-		stream.transfer(mMaxAniso);
-		stream.transfer(mMinFilter);
-		stream.transfer(mMagFilter);
-		stream.transfer(mMinLod);
-		stream.transfer(mMaxLod);
-		stream.transfer(mMipmapLevel);
-		stream.seek(1);
-		stream.transfer(mLodBias);
-		stream.transfer(ofsTex);
-	}
-	void write(oishii::v2::Writer& stream) const
-	{
-		oishii::DebugExpectSized dbg(stream, 0x20 - 4);
-
-		stream.write(mFormat);
-		stream.write(bTransparent);
-		stream.write(mWidth);
-		stream.write(mHeight);
-		stream.write(mWrapU);
-		stream.write(mWrapV);
-		stream.seek(1);
-		stream.write(mPaletteFormat);
-		stream.write(nPalette);
-		stream.write<u32>(0);
-		// stream.transfer(ofsPalette);
-		stream.write(bMipMap);
-		stream.write(bEdgeLod);
-		stream.write(bBiasClamp);
-		stream.write(mMaxAniso);
-		stream.write(mMinFilter);
-		stream.write(mMagFilter);
-		stream.write(mMinLod);
-		stream.write(mMaxLod);
-		stream.write(mMipmapLevel);
-		stream.seek(1);
-		stream.write(mLodBias);
-		// stream.transfer(ofsTex);
-	}
-};
-
-
+	stream.write<u8>(mFormat);
+	stream.write<u8>(bTransparent);
+	stream.write<u16>(mWidth);
+	stream.write<u16>(mHeight);
+	stream.write<u8>(static_cast<u8>(mWrapU));
+	stream.write<u8>(static_cast<u8>(mWrapV));
+	stream.seek(1);
+	stream.write<u8>(mPaletteFormat);
+	stream.write<u16>(nPalette);
+	stream.write<u32>(0);
+	// stream.transfer(ofsPalette);
+	stream.write<u8>(bMipMap);
+	stream.write<u8>(bEdgeLod);
+	stream.write<u8>(bBiasClamp);
+	stream.write<u8>(static_cast<u8>(mMaxAniso));
+	stream.write<u8>(static_cast<u8>(mMinFilter));
+	stream.write<u8>(static_cast<u8>(mMagFilter));
+	stream.write<s8>(mMinLod);
+	stream.write<s8>(mMaxLod);
+	stream.write<u8>(mMipmapLevel);
+	stream.seek(1);
+	stream.write<s16>(mLodBias);
+	// stream.transfer(ofsTex);
+}
+Tex::Tex(Texture& data, libcube::GCMaterialData::SamplerData& sampl)
+{
+	mFormat = data.mFormat;
+	bTransparent = data.bTransparent;
+	mWidth = data.mWidth;
+	mHeight = data.mHeight;
+	mWrapU = sampl.mWrapU;
+	mWrapV = sampl.mWrapV;
+	mPaletteFormat = data.mPaletteFormat;
+	nPalette = data.nPalette;
+	ofsPalette = 0;
+	bMipMap = sampl.mMinFilter != libcube::gx::TextureFilter::linear && sampl.mMinFilter != libcube::gx::TextureFilter::near;
+	bEdgeLod = sampl.bEdgeLod;
+	bBiasClamp = sampl.bBiasClamp;
+	mMaxAniso = sampl.mMaxAniso;
+	mMinFilter = sampl.mMinFilter;
+	mMagFilter = sampl.mMagFilter;
+	mMinLod = data.mMinLod;
+	mMaxLod = data.mMaxLod;
+	mMipmapLevel = data.mMipmapLevel;
+	mLodBias = roundf(sampl.mLodBias * 100.0f);
+	ofsTex = -1;
+}
 void readTEX1(BMDOutputContext& ctx)
 {
 	auto& reader = ctx.reader;
@@ -104,6 +104,8 @@ void readTEX1(BMDOutputContext& ctx)
 		nameTable = readNameTable(reader);
 	}
 
+	ctx.mdl.get().mTexCache.clear();
+
 	std::vector<std::pair<std::unique_ptr<Texture>, std::pair<u32, u32>>> texRaw;
 
 	reader.seek(ofsHeaders);
@@ -120,14 +122,14 @@ void readTEX1(BMDOutputContext& ctx)
 				if (samp.btiId == i)
 				{
 					samp.mTexture = nameTable[i];
-					samp.mWrapU = static_cast<libcube::gx::TextureWrapMode>(tex.mWrapU);
-					samp.mWrapV = static_cast<libcube::gx::TextureWrapMode>(tex.mWrapV);
+					samp.mWrapU = tex.mWrapU;
+					samp.mWrapV = tex.mWrapV;
 					// samp.bMipMap = tex.bMipMap;
 					samp.bEdgeLod = tex.bEdgeLod;
 					samp.bBiasClamp = tex.bBiasClamp;
-					samp.mMaxAniso = static_cast<libcube::gx::AnisotropyLevel>(tex.mMaxAniso);
-					samp.mMinFilter = static_cast<libcube::gx::TextureFilter>(tex.mMinFilter);
-					samp.mMagFilter = static_cast<libcube::gx::TextureFilter>(tex.mMagFilter);
+					samp.mMaxAniso = tex.mMaxAniso;
+					samp.mMinFilter = tex.mMinFilter;
+					samp.mMagFilter = tex.mMagFilter;
 					samp.mLodBias = static_cast<f32>(tex.mLodBias) / 100.0f;
 				}
 			}
@@ -136,17 +138,18 @@ void readTEX1(BMDOutputContext& ctx)
 			if (samp.btiId == i)
 			{
 				samp.mTexture = nameTable[i];
-				samp.mWrapU = static_cast<libcube::gx::TextureWrapMode>(tex.mWrapU);
-				samp.mWrapV = static_cast<libcube::gx::TextureWrapMode>(tex.mWrapV);
+				samp.mWrapU = tex.mWrapU;
+				samp.mWrapV = tex.mWrapV;
 				// samp.bMipMap = tex.bMipMap;
 				samp.bEdgeLod = tex.bEdgeLod;
 				samp.bBiasClamp = tex.bBiasClamp;
-				samp.mMaxAniso = static_cast<libcube::gx::AnisotropyLevel>(tex.mMaxAniso);
-				samp.mMinFilter = static_cast<libcube::gx::TextureFilter>(tex.mMinFilter);
-				samp.mMagFilter = static_cast<libcube::gx::TextureFilter>(tex.mMagFilter);
+				samp.mMaxAniso = tex.mMaxAniso;
+				samp.mMinFilter = tex.mMinFilter;
+				samp.mMagFilter = tex.mMagFilter;
 				samp.mLodBias = static_cast<f32>(tex.mLodBias) / 100.0f;
 			}
 		}
+		ctx.mdl.get().mTexCache.push_back(tex);
 		auto& inf = texRaw.emplace_back(std::make_unique<Texture>(), std::pair<u32, u32>{0, 0});
 		auto& data = *inf.first.get();
 
@@ -185,9 +188,10 @@ void readTEX1(BMDOutputContext& ctx)
 		std::unique_ptr<Texture> data = std::move(texpair.first);
 
 		data->mData.resize(size);
-		assert(ofs + size < reader.endpos());
+		// assert(ofs + size < reader.endpos());
 		// memcpy_s(data->mData.data(), data->mData.size(), reader.getStreamStart() + ofs, size);
-		memcpy(data->mData.data(), reader.getStreamStart() + ofs, size);
+		if (ofs + size < reader.endpos())
+			memcpy(data->mData.data(), reader.getStreamStart() + ofs, size);
 		ctx.col.addTexture();
 		ctx.col.getTexture(ctx.col.getTextures().size() - 1).get() = *data.get();
 
@@ -203,7 +207,7 @@ void readTEX1(BMDOutputContext& ctx)
 			if (samp->mTexture.empty())
 			{
 				printf("Material %s: Sampler %u is invalid.\n", mat.getName().c_str(), (u32)i);
-				assert(!samp->mTexture.empty());
+ 				assert(!samp->mTexture.empty());
 			}
 		}
 	}
@@ -254,57 +258,11 @@ struct TEX1Node final : public oishii::v2::Node
 
 		Result write(oishii::v2::Writer& writer) const noexcept
 		{
-			std::vector<Material::SamplerData> unique_samplers;
-			const u32 mat_size = mMdl.getMaterials().size();
-			for (u32 i = 0; i < mat_size; ++i)
+			int i = 0;
+			for (const auto& ex : mMdl.get().mTexCache)
 			{
-				const auto& mat = mMdl.getMaterial(i).get();
-
-				for (int j = 0; j < mat.samplers.size(); ++j)
-				{
-					const auto& sampl = *mat.samplers[j].get();
-					assert(!sampl.mTexture.empty());
-
-					if (std::find(unique_samplers.begin(), unique_samplers.end(), sampl) == unique_samplers.end())
-						unique_samplers.push_back(sampl);
-					else
-						DebugReport("Compressed.\n");
-				}
-			}
-
-			const auto& texFolder = mCol.getTextures();
-			for (const auto& sampl : unique_samplers)
-			{
-				const Texture* tex_data = nullptr;
-				for (int i = 0; i < texFolder.size(); ++i)
-					if (mCol.getTexture(i).get().getName() == sampl.mTexture)
-						tex_data = &mCol.getTexture(i).get();
-
-				assert(tex_data && "Link failure");
-
-				Tex cur_tex;
-				cur_tex.mFormat = tex_data->mFormat;
-				cur_tex.bTransparent = tex_data->bTransparent;
-				cur_tex.mWidth = tex_data->mWidth;
-				cur_tex.mHeight = tex_data->mHeight;
-				cur_tex.mWrapU = static_cast<u8>(sampl.mWrapU);
-				cur_tex.mWrapV = static_cast<u8>(sampl.mWrapV);
-				cur_tex.mPaletteFormat = tex_data->mPaletteFormat;
-				cur_tex.nPalette = tex_data->nPalette;
-				cur_tex.ofsPalette = 0;
-				cur_tex.bMipMap = sampl.mMinFilter != libcube::gx::TextureFilter::linear && sampl.mMinFilter != libcube::gx::TextureFilter::near;
-				cur_tex.bEdgeLod = sampl.bEdgeLod;
-				cur_tex.bBiasClamp = sampl.bBiasClamp;
-				cur_tex.mMaxAniso = static_cast<u8>(sampl.mMaxAniso);
-				cur_tex.mMinFilter = static_cast<u8>(sampl.mMinFilter);
-				cur_tex.mMagFilter = static_cast<u8>(sampl.mMagFilter);
-				cur_tex.mMinLod = tex_data->mMinLod;
-				cur_tex.mMaxLod = tex_data->mMaxLod;
-				cur_tex.mMipmapLevel = tex_data->mMipmapLevel;
-				cur_tex.mLodBias = roundf(sampl.mLodBias * 100.0f);
-				cur_tex.ofsTex = -1;
-				cur_tex.write(writer);
-				writer.writeLink<s32>(*this, "TEX1::" + sampl.mTexture);
+				ex.write(writer);
+				writer.writeLink<s32>(*this, "TEX1::" + std::to_string(i++));
 			}
 
 			return {};
@@ -318,7 +276,7 @@ struct TEX1Node final : public oishii::v2::Node
 		TexEntry(const Model& mdl, const CollectionAccessor col, u32 texIdx)
 			: mMdl(mdl), mCol(col), mIdx(texIdx)
 		{
-			mId = col.getTexture(texIdx).get().mName;
+			mId = std::to_string(texIdx);
 			getLinkingRestriction().setLeaf();
 			getLinkingRestriction().alignment = 32;
 		}
@@ -347,7 +305,7 @@ struct TEX1Node final : public oishii::v2::Node
 		writer.write<u32, oishii::EndianSelect::Big>('TEX1');
 		writer.writeLink<s32>({ *this }, { *this, oishii::v2::Hook::EndOfChildren });
 
-		writer.write<u16>((u16)mModel.getJoints().size());
+		writer.write<u16>((u16)mModel.get().mTexCache.size());
 		writer.write<u16>(-1);
 
 		writer.writeLink<s32>(
@@ -363,10 +321,11 @@ struct TEX1Node final : public oishii::v2::Node
 	Result gatherChildren(NodeDelegate& d) const noexcept override
 	{
 		d.addNode(std::make_unique<TexHeaders>(mModel, mCol));
-		d.addNode(std::make_unique<TexNames>(mModel, mCol));
 
-		for (int i = 0; i < mCol.getTextures().size(); ++i)
+		for (int i = 0; i < mModel.get().mTexCache.size(); ++i)
 			d.addNode(std::make_unique<TexEntry>(mModel, mCol, i));
+		
+		d.addNode(std::make_unique<TexNames>(mModel, mCol));
 
 		return {};
 	}

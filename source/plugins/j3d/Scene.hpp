@@ -40,6 +40,34 @@ struct Collection : public lib3d::Scene {
 	bool operator==(const Collection& rhs) const { return true;}
 };
 
+
+struct Tex
+{
+	u8 mFormat;
+	u8 bTransparent;
+	u16 mWidth, mHeight;
+	libcube::gx::TextureWrapMode mWrapU, mWrapV;
+	u8 mPaletteFormat;
+	u16 nPalette;
+	u32 ofsPalette;
+	u8 bMipMap;
+	u8 bEdgeLod;
+	u8 bBiasClamp;
+	libcube::gx::AnisotropyLevel mMaxAniso;
+	libcube::gx::TextureFilter mMinFilter;
+	libcube::gx::TextureFilter mMagFilter;
+	s8 mMinLod;
+	s8 mMaxLod;
+	u8 mMipmapLevel;
+	s16 mLodBias;
+	u32 ofsTex;
+
+	void transfer(oishii::BinaryReader& stream);
+	void write(oishii::v2::Writer& stream) const;
+	Tex() = default;
+	Tex(Texture& data, libcube::GCMaterialData::SamplerData& sampler);
+};
+
 struct Model : public lib3d::Model {
 	virtual ~Model() = default;
     // Shallow comparison
@@ -144,6 +172,8 @@ struct Model : public lib3d::Model {
 		Section<u8> dithers;
 		Section<NBTScale> nbtScales;
 	} mMatCache;
+
+	std::vector<Tex> mTexCache;
 };
 
 struct ModelAccessor : public kpi::NodeAccessor<Model> {
