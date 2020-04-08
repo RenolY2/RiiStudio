@@ -16,7 +16,7 @@ struct Texture : public riistudio::lib3d::Texture
 	inline u32 getEncodedSize(bool mip) const override
     {
 		return GetTexBufferSize(getWidth(), getHeight(), getTextureFormat(),
-			mip && getMipmapCount() > 1, mip ? getMipmapCount() + 1 : 0);
+			mip && getMipmapCount() > 0, mip ? getMipmapCount() + 1 : 0);
     }
 	inline void decode(std::vector<u8>& out, bool mip) const override
 	{
