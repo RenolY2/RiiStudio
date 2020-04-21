@@ -49,6 +49,12 @@ private:
   // Camera state
   glm::vec3 eye{0.0f, 0.0f, 0.0f};
   glm::vec3 direction;
+  float xprev = 0.0f;
+  float yprev = 0.0f;
+  // horizontal angle : toward -Z
+  float horizontalAngle = 3.14f;
+  // vertical angle : 0, look at the horizon
+  float verticalAngle = 0.0f;
   // Render settings
   bool rend = true;
   bool wireframe = false;

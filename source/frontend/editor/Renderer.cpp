@@ -414,11 +414,6 @@ void Renderer::render(u32 width, u32 height, bool& showCursor) {
     ImGui::EndMenuBar();
   }
 
-  // horizontal angle : toward -Z
-  float horizontalAngle = 3.14f;
-  // vertical angle : 0, look at the horizon
-  float verticalAngle = 0.0f;
-
   // TODO: Enable for plane mode
   // glm::vec3 up = glm::cross(right, direction);
   glm::vec3 up = {0, 1, 0};
@@ -442,15 +437,18 @@ void Renderer::render(u32 width, u32 height, bool& showCursor) {
 
     static float xpos = 0;
     static float ypos = 0;
+	auto pos = ImGui::GetMousePos();
 
+    xpos = pos.x;
+    ypos = pos.y;
     if (!showCursor) {
-      auto pos = ImGui::GetMousePos();
-
-      xpos = pos.x;
-      ypos = pos.y;
+      
+	  horizontalAngle += mouseSpeed * deltaTime * float(xprev - xpos);
+      verticalAngle += mouseSpeed * deltaTime * float(yprev - ypos);
+	  
     }
-    horizontalAngle += mouseSpeed * deltaTime * float(width - xpos);
-    verticalAngle += mouseSpeed * deltaTime * float(height - ypos);
+    xprev = xpos;
+	yprev = ypos;
 
     // Direction : Spherical coordinates to Cartesian coordinates conversion
     direction =
